@@ -4,7 +4,7 @@ import configparser
 def getWeightConfig():
     cf = configparser.ConfigParser()
     cf.read('configure.ini')
-    weightCount = cf.get('weight', 'weightCount')
+    weightCount = cf.get('weight', 'weightTestGroupCount')
     weights = []
     for i in range(weightCount):
         weightItem = cf.get('weight', 'weight' + str(i))
@@ -14,6 +14,13 @@ def getWeightConfig():
             weightNew.append(int(item))
         weights.append(weightNew)
     return weights
+
+#读取权重列数
+def getWeightColCount():
+    cf = configparser.ConfigParser()
+    cf.read('configure.ini')
+    weightCount = cf.get('weight', 'weightColCount')
+    return int(weightCount)
 
 #读取测试次数
 def getTestCountConfig():

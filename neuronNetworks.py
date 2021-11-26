@@ -378,8 +378,6 @@ class neuronNetwork(INN):
     def __init__(self, linkGroup) -> None:
         nodeCount = configure.getNodeCount() - 1    #需要减去SN的占位
         self.SN = sinkNode()
-        self.cycleLenght = configure.getDataGeneralCycle()        #节点产生新数据的周期长度，单位是S，记为T0
-        self.loopOneSec = configure.getSlotPerSec()               #每秒被分为了多少个时间槽，节点发送数据包的最小消耗时间是时间槽，节点在每个时间槽都要做出自己的决定
 
         self.nodes = []                             #拥有的神经元节点，  注意：不是所有的神经元都加入到网络中并发挥了作用
 
@@ -397,7 +395,7 @@ class neuronNetwork(INN):
             self.nodes.append(item)
 
     #调用节点的时间流逝
-    def timeLapseOnNode(self, nodeID, timeOffset, param = None):
+    def timeLapseOnNode(self, nodeID, timeOffset, inputVector = None):
         if nodeID == 0:
             #SN
             result = self.SN.timeLapse(timeOffset)
@@ -423,7 +421,7 @@ class neuronNetwork(INN):
                         self.state = WorkState.ON_WAIT_TO_ADD
 
         else:
-            result = self.nodes[nodeID].timeLapse(timeOffset, param)
+            result = self.nodes[nodeID].timeLapse(inputVector)
         return result
     
     #获取上一轮的状态，在SN的日常任务后，如果不为None，可以获取到
@@ -476,6 +474,4 @@ class neuronNetwork(INN):
         node = self.nodes[srcID]
         node.addEdge(desID)
     
-
-
     

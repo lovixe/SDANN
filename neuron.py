@@ -77,7 +77,7 @@ class neuronNode(object):
         return result
 
     #每过一段时间时，就会触发。参数为当前的时间偏移,以及当前节点感知到的其他节点的信息量
-    def timeLapse(self, timeOffset, QIs):
+    def timeLapse(self, inputVector):
         if self.state == States.SCATTERED:
             #散点不需要有什么动作
             return
@@ -87,7 +87,7 @@ class neuronNode(object):
         connectID = None
 
         for item in self.edges:
-            result = item.calc(QIs[str(self.nodeID)], QIs[str(item.toID), timeOffset])
+            result = item.calc(inputVector)
             if result > max:
                 max = result
                 connectID = item.toID
