@@ -270,6 +270,10 @@ class delEdgeNode(object):
         for item in nnConnect:
             self.edges.append(delEdgeRecord(self.nodeID, item, self.INN.getWeight(self.nodeID, item), curLossValue))
 
+        #没有可用的边线直接完成就可以
+        if len(self.edges) == 0:
+            self.complete = True
+
         #从第一个边线开始测试
         self.index = 0
 
@@ -302,18 +306,42 @@ class delEdgeNode(object):
                 self.active()
 
 
-#删除
-class delEdgeWork(object):
-    def __init__(self, INN) -> None:
+#删除节点连线
+class delEdgeWorker(object):
+    def __init__(self, INN, lossValue) -> None:
         self.INN = INN
-        #定位到节点
-        self.curNode = 0
-        self.getNext()
+        self.complete = False
+        #定位到末尾节点
+        nodeCount = configure.getNodeCount()
+        self.lastLossValue = lossValue
+        self.curNode = delEdgeNode(nodeCount - 1, INN, self.lastLossValue)
+        if self.curNode.complete == True:
+            self.getNext(self.curNode.nodeID)
 
-    def getNext(self):
-        #找到最后的一个节点，准备开始测试
-        
+    #获取下一个可以作为边线的源头的节点
+    def getNext(self, curNodeID):
+        #随机找前面的节点,直接获取无线连接即可，无线连接是无方向的。
+        wwConnect = self.INN.getConnectToNode(curNodeID)
+        candidate = []
+        for item in wwConnect:
+            if item < curNodeID:
+                candidate.append(item)
+        if len(candidate) == 0:
+            self.complete = True
+            return
+        #随机选择一个节点
+        nextNodeID = candidate[random.randint(0, len(candidate - 1))]
+        if len(self.INN.getEdgeFromNode(nextNodeID)) == 0:
+            #这个节点没有可以删除的边线
+            self.getNext(nextNodeID)
+        else:
+            self.curNode = delEdgeNode(nextNodeID, self.INN, self.lastLossValue)
 
+    #增加一个结果
+    def addResult(self, value):
+        self.curNode.addResult(value)
+        if self.curNode.complete == True:
+            self.getNext()
 
 class WorkState(Enum):
     ON_ADD_EDGE = 1
@@ -379,27 +407,32 @@ class neuronNetwork(INN):
                     #等待一次后，转为添加模式
                     self.state = WorkState.ON_ADD_EDGE
                     self.addEdgeWorker = addEdgeWorker(self, result)
+
                 elif self.state == WorkState.ON_ADD_EDGE:
                     self.addEdgeWorker.addResult(result)
                     if self.addEdgeWorker.complete == True:
                         self.state = WorkState.ON_WAIT_TO_DEL
-                    else:
-                        pass #继续等待
+
                 elif self.state == WorkState.ON_WAIT_TO_DEL:
                     self.state = WorkState.ON_DEL_EDGE
+                    self.delEdgeWorker = delEdgeWorker(self.INN, result)
+
+                elif self.state == WorkState.ON_DEL_EDGE:
+                    self.delEdgeWorker.addResult(result)
+                    if self.delEdgeWorker.complete == True:
+                        self.state = WorkState.ON_WAIT_TO_ADD
 
         else:
             result = self.nodes[nodeID].timeLapse(timeOffset, param)
         return result
-
-    #神经网络的时间流逝
-    def timeLapseOnNeuronNetworks(self, timeOffset):
-        pass
     
     #获取上一轮的状态，在SN的日常任务后，如果不为None，可以获取到
     def getSNStates(self):
         return self.SN.getLastStates()
 
+    #INN接口的部分
+
+    #获取到某个节点的边线
     def getEdgeToNode(self, targetNodeID):
         #查找所有连接到这个节点的连接
         result = []
