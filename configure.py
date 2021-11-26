@@ -56,3 +56,10 @@ def getSlotPerSec():
     cf.read('configuire.ini')
     result = cf.get('system', 'slotPerSecond')
     return int(result)
+
+#节点的连接范围
+def getConnectRange():
+    cf = configparser.ConfigParser()
+    cf.read('configuire.ini')
+    result = cf.get('node', 'connectRange')
+    return int(result)

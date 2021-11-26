@@ -349,7 +349,7 @@ class WorkState(Enum):
     ON_WAIT_TO_ADD = 3
     ON_WAIT_TO_DEL = 4
 
-
+#神经网络对内接口
 class INN(meteaclass=ABCMeta):
     #获取有哪些节点连接到这个节点
     @abstractclassmethod
@@ -373,15 +373,23 @@ class INN(meteaclass=ABCMeta):
     @abstractclassmethod
     def getConnectWeight(self, srcID, desID): pass
 
+#神经网络对外接口
+class INeuronNetworks(meteclass=ABCMeta):
+    @abstractclassmethod
+    def timeLapse(self, nodeID, timeOffset, inputVector=None): pass
+
+    @abstractclassmethod
+    def setLinkGroup(self, linkGroup): pass
+
 class neuronNetwork(INN):
     #maxInfroInSingleFrm 是单帧最大值，根据使用的协议以及压缩算法确定
-    def __init__(self, linkGroup) -> None:
+    def __init__(self) -> None:
         nodeCount = configure.getNodeCount() - 1    #需要减去SN的占位
         self.SN = sinkNode()
 
         self.nodes = []                             #拥有的神经元节点，  注意：不是所有的神经元都加入到网络中并发挥了作用
 
-        self.linkGroup = linkGroup
+        self.linkGroup = None
 
         self.addEdgeWorker = None
         self.delEdgeWorker = None
@@ -395,7 +403,7 @@ class neuronNetwork(INN):
             self.nodes.append(item)
 
     #调用节点的时间流逝
-    def timeLapseOnNode(self, nodeID, timeOffset, inputVector = None):
+    def timeLapse(self, nodeID, timeOffset, inputVector = None):
         if nodeID == 0:
             #SN
             result = self.SN.timeLapse(timeOffset)
