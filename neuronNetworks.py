@@ -254,6 +254,9 @@ class delEdgeRecord(object):
             if curResult < self.beforeLossValue:
                 self.canDelete = True
 
+    def getResult(self):
+        return self.rmse(self.results)
+
  
 class delEdgeNode(object):
     def __init__(self, nodeID, INN, curLossValue) -> None:
@@ -269,10 +272,34 @@ class delEdgeNode(object):
 
         #从第一个边线开始测试
         self.index = 0
+
+    #激活测试
+    def active(self):
+        #删除边线，然后开始评估
+        self.INN.delEdge(self.edges[self.index].fromID, self.edges[self.index].toID)
     
     #增加一个结果
     def addResult(self, lossValue):
-        pass
+        self.edges[self.index].addResult(lossValue)
+        if self.edges[self.index].complete == True:
+            #已经完成了测试
+            if self.edges[self.index].canDelete == False:
+                #效果不好，需要恢复边线
+                self.INN.addEdge(self.edges[self.index].fromID, self.edges[self.index].toID)
+                self.INN.setConnectWeight(self.edges[self.index].fromID, self.edges[self.index].toID, self.edges[self.index].weight)
+            else:
+                #效果挺好，那么保留这个删除,并更新当前最低的损失
+                self.lastLossValue = self.edges[self.index].getResult()
+                for item in self.edges:
+                    item.updateBeforeLossValue(self.lastLossValue)
+            
+            #最后加1
+            self.index = self.index + 1
+            if self.index == len(self.edges):
+                self.complete = True
+            else:
+                #激活下一次测试
+                self.active()
 
 
 #删除
@@ -284,8 +311,8 @@ class delEdgeWork(object):
         self.getNext()
 
     def getNext(self):
-        #找到
-        pass
+        #找到最后的一个节点，准备开始测试
+        
 
 
 class WorkState(Enum):
