@@ -77,8 +77,12 @@ class neuronNode(object):
         return result
 
     #提取对应的输入数据
-    def getInputVector(self, inputVector):
-        pass
+    def getInputVector(self, inputVector, fromID, toID):
+        #inputVector是字典格式
+        result = []
+        result.append(inputVector[str('fromID')])
+        result.append(inputVector[str('toID')])
+        result.append(inputVector['timeOffset'])
 
     #每过一段时间时，就会触发。参数为当前的时间偏移,以及当前节点感知到的其他节点的信息量
     def timeLapse(self, inputVector):
@@ -93,7 +97,7 @@ class neuronNode(object):
         #TO-DO 提取出对应的数据，应为对应不同的节点是不一样的
 
         for item in self.edges:
-            result = item.calc(inputVector)
+            result = item.calc(getInputVector(inputVector, self.nodeID, item.toID))
             if result > max:
                 max = result
                 connectID = item.toID
