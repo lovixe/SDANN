@@ -1,13 +1,13 @@
 #神经网络出口，神经元可以建立与出口的连接。出口有自己的运行逻辑以区别与普通的神经元节点。
 import packet
-import configure
+from configure import config
 
 
 class sinkNode(object):
     def __init__(self) -> None:
         self.id = 0     # 默认SN就是ID为0的节点
-        self.nodeCount = configure.getNodeCount() - 1     #除了SN之外的节点数量
-        self.maxInforInSingleFrm = configure.getMaxQIInFrm()
+        self.nodeCount = config.nodeCount - 1     #除了SN之外的节点数量
+        self.maxInforInSingleFrm = config.maxQIInFrm
         self.recvs = []                 #存储本轮内收到的数据包
 
         self.lastLoopRecvs = []         #上一轮收到的数据包

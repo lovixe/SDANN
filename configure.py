@@ -1,65 +1,86 @@
 import configparser
 
-#读取权重配置
-def getWeightConfig():
-    cf = configparser.ConfigParser()
-    cf.read('configure.ini')
-    weightCount = cf.get('weight', 'weightTestGroupCount')
-    weights = []
-    for i in range(weightCount):
-        weightItem = cf.get('weight', 'weight' + str(i))
-        weightStrSplit = weightItem.split(',')
-        weightNew = []
-        for item in weightStrSplit:
-            weightNew.append(int(item))
-        weights.append(weightNew)
-    return weights
+class configureReader(object):
+    _instance = {}
+    def __init__(self) -> None:
+        self.weights = self.getWeightConfig()
+        self.weightColCount = self.getWeightColCount()
+        self.testCount = self.getTestCountConfig()
+        self.nodeCount = self.getNodeCount()
+        self.maxQIInFrm = self.getMaxQIInFrm()
+        self.dataGeneralCycle = self.getDataGeneralCycle()
+        self.slotPerSec = self.getSlotPerSec()
+        self.connectRange = self.getConnectRange()
+        self.maxLiveTime = self.getMaxLiveTime()
+    #读取权重配置
+    def getWeightConfig():
+        cf = configparser.ConfigParser()
+        cf.read('configure.ini')
+        weightCount = cf.get('weight', 'weightTestGroupCount')
+        weights = []
+        for i in range(weightCount):
+            weightItem = cf.get('weight', 'weight' + str(i))
+            weightStrSplit = weightItem.split(',')
+            weightNew = []
+            for item in weightStrSplit:
+                weightNew.append(int(item))
+            weights.append(weightNew)
+        return weights
 
-#读取权重列数
-def getWeightColCount():
-    cf = configparser.ConfigParser()
-    cf.read('configure.ini')
-    weightCount = cf.get('weight', 'weightColCount')
-    return int(weightCount)
+    #读取权重列数
+    def getWeightColCount():
+        cf = configparser.ConfigParser()
+        cf.read('configure.ini')
+        weightCount = cf.get('weight', 'weightColCount')
+        return int(weightCount)
 
-#读取测试次数
-def getTestCountConfig():
-    cf = configparser.ConfigParser()
-    cf.read('configure.ini')
-    testCount = cf.get('test', 'testCount')
-    return int(testCount)
+    #读取测试次数
+    def getTestCountConfig():
+        cf = configparser.ConfigParser()
+        cf.read('configure.ini')
+        testCount = cf.get('test', 'testCount')
+        return int(testCount)
 
-#读取节点个数
-def getNodeCount():
-    cf = configparser.ConfigParser()
-    cf.read('configure.ini')
-    result = cf.get('node', 'nodeCount')
-    return int(result)
+    #读取节点个数
+    def getNodeCount():
+        cf = configparser.ConfigParser()
+        cf.read('configure.ini')
+        result = cf.get('node', 'nodeCount')
+        return int(result)
 
-#读取单帧最大QI
-def getMaxQIInFrm():
-    cf = configparser.ConfigParser()
-    cf.read('configuire.ini')
-    result = cf.get('system', 'maxQIInFrm')
-    return int(result)
+    #读取单帧最大QI
+    def getMaxQIInFrm():
+        cf = configparser.ConfigParser()
+        cf.read('configuire.ini')
+        result = cf.get('system', 'maxQIInFrm')
+        return int(result)
 
-#数据产生周期
-def getDataGeneralCycle():
-    cf = configparser.ConfigParser()
-    cf.read('configuire.ini')
-    result = cf.get('system', 'dataGeneralCycle')
-    return int(result)
+    #数据产生周期
+    def getDataGeneralCycle():
+        cf = configparser.ConfigParser()
+        cf.read('configuire.ini')
+        result = cf.get('system', 'dataGeneralCycle')
+        return int(result)
 
-#每秒分为多少个段
-def getSlotPerSec():
-    cf = configparser.ConfigParser()
-    cf.read('configuire.ini')
-    result = cf.get('system', 'slotPerSecond')
-    return int(result)
+    #每秒分为多少个段
+    def getSlotPerSec():
+        cf = configparser.ConfigParser()
+        cf.read('configuire.ini')
+        result = cf.get('system', 'slotPerSecond')
+        return int(result)
 
-#节点的连接范围
-def getConnectRange():
-    cf = configparser.ConfigParser()
-    cf.read('configuire.ini')
-    result = cf.get('node', 'connectRange')
-    return int(result)
+    #节点的连接范围
+    def getConnectRange():
+        cf = configparser.ConfigParser()
+        cf.read('configuire.ini')
+        result = cf.get('node', 'connectRange')
+        return int(result)
+
+    #数据最多存活时间
+    def getMaxLiveTime():
+        cf = configparser.ConfigParser()
+        cf.read('configure.ini')
+        result = cf.get('system', 'maxLiveTime')
+        return int(result)
+
+config = configureReader()

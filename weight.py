@@ -1,11 +1,11 @@
 import random
-import configure
+from configure import config
 #Quantity of Information:  QI
 
 class neuronWeight(object):
     def __init__(self, weight = None) -> None:
         if weight == None:
-            weightColCount = configure.getWeightColCount()
+            weightColCount = config.weightColCount
             self.weight = []
             for i in range(weightColCount):
                 self.weight.append(random.random())

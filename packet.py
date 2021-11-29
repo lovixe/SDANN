@@ -1,11 +1,11 @@
-
+from configure import config
 
 #单一节点数据包
 class nodePacket(object):
-    def __init__(self, nodeID, maxLiveTime) -> None:
+    def __init__(self, nodeID) -> None:
         self.nodeID = nodeID
         self.timestamp = 0      #当累加到一定程度后会被删除
-        self.maxLiveTime = maxLiveTime  #节点的最大存活时间
+        self.maxLiveTime = config.maxLiveTime  #节点的最大存活时间
 
     def checkObsolete(self):
         if self.timestamp >= self.maxLiveTime:
@@ -19,13 +19,13 @@ class nodePacket(object):
 
 #数据包类，可以包括多个不同的数据包
 class packet(object):
-    def __init__(self, maxNodeCapacity, maxLiveTime) -> None:
+    def __init__(self) -> None:
         self.packets = []
-        self.maxNodeCapacity = maxNodeCapacity  #最多可以包括多少个节点的信息
+        self.maxNodeCapacity = config.maxQIInFrm  #最多可以包括多少个节点的信息
         self.aggGoal = 0                        #当其中的节点数据包因为超时后也不会允许再次聚合
         self.hadAgg = 0                         #曾经聚合的数据包个数  
-        self.timestamp =  0                     #记录时间戳  
-        self.maxLiveTime = maxLiveTime
+        self.timestamp =  0                     #记录时间戳,这是数据包的时间戳，每个节点也有自己的时间戳的。  
+        self.maxLiveTime = config.maxLiveTime
 
     #时间流逝, 当返回False，表示这个数据包已经超时了。当返回True时，表明这个数据包正常
     def timeLapse(self):

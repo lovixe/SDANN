@@ -5,7 +5,7 @@ from neuron import States, neuronNode
 from enum import Enum
 from abc import abstractclassmethod, ABCMeta
 from edge import edge
-import configure
+from configure import config
 import numpy as np
 import random
 
@@ -15,7 +15,7 @@ class estimatorWeight(object):
         self.weight = weight            #这两个参数用途是一样的，备用
         self.complete = False          #是否测试完成
         self.testIndex = 0
-        self.testCount = configure.getTestCountConfig()
+        self.testCount = config.testCount
         self.testResult = []            #测试结果记录在这里
 
     #增加一个结果
@@ -51,7 +51,7 @@ class estimatorEdge(object):
         self.weightGroup = []       #权重组
         self.INN = INN
         #产生所有的权重组
-        weights = configure.getWeightConfig()
+        weights = config.weights
         for i in range(len(weights)):
             self.weightGroup.append(estimatorWeight(weights[i]))
         self.testIndex = 0      #从第0个权重开始测试
@@ -233,7 +233,7 @@ class delEdgeRecord(object):
         self.weight = weight
         self.beforeLossValue = lossValue
         self.results = []
-        self.testCount = configure.getTestCountConfig()
+        self.testCount = config.testCount
         self.complete = False
         self.canDelete = False
 
@@ -312,7 +312,7 @@ class delEdgeWorker(object):
         self.INN = INN
         self.complete = False
         #定位到末尾节点
-        nodeCount = configure.getNodeCount()
+        nodeCount = config.nodeCount
         self.lastLossValue = lossValue
         self.curNode = delEdgeNode(nodeCount - 1, INN, self.lastLossValue)
         if self.curNode.complete == True:
@@ -381,10 +381,10 @@ class INeuronNetworks(meteclass=ABCMeta):
     @abstractclassmethod
     def setLinkGroup(self, linkGroup): pass
 
-class neuronNetwork(INN):
+class neuronNetwork(INN, INeuronNetworks):
     #maxInfroInSingleFrm 是单帧最大值，根据使用的协议以及压缩算法确定
     def __init__(self) -> None:
-        nodeCount = configure.getNodeCount() - 1    #需要减去SN的占位
+        nodeCount = config.nodeCount - 1    #需要减去SN的占位
         self.SN = sinkNode()
 
         self.nodes = []                             #拥有的神经元节点，  注意：不是所有的神经元都加入到网络中并发挥了作用
@@ -401,6 +401,11 @@ class neuronNetwork(INN):
             item = neuronNode(i)
             #按照顺序添加
             self.nodes.append(item)
+
+    #设置连接
+    def setLinkGroup(self, linkGroup):
+        self.linkGroup = linkGroup
+
 
     #调用节点的时间流逝
     def timeLapse(self, nodeID, timeOffset, inputVector = None):
