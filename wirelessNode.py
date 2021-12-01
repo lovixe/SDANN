@@ -70,7 +70,7 @@ class node(object):
         if self.packet == None:
             result[str(self.nodeID)] = 0
         else:
-            result[str(self.nodeID)] = self.packet.hadAgg
+            result[str(self.nodeID)] = self.packet.getRemainSpace()
 
         for item in self.linkGroup[self.nodeID]:
             result[str(item)] = self.iwn.getNodeQI(item)
@@ -118,7 +118,6 @@ class node(object):
                 #未能全部完成聚合
                 del tmp.packets[0:count]
                 self.neuronNetwork.overTransmit(self.packet)
-                tmp.hadAgg = tmp.hadAgg - count
                 self.packet = tmp
             else:
                 #完成聚合了，那么这个tmp就没有什么用途了
@@ -134,7 +133,7 @@ class node(object):
             if self.packet == None:
                 return 0
             else:
-                return self.packet.hadAgg
+                return len(self.packet)
 
 class IWN():
     

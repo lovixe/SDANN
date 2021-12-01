@@ -42,7 +42,7 @@ class packet(object):
     def aggregation(self, waitAggPackets):
         count = 0
         for item in waitAggPackets:
-            if self.hadAgg < self.maxNodeCapacity:
+            if len(self.packets) < self.maxNodeCapacity:
                 tmp = copy.deepcopy(item)
                 self.packets.append(tmp)
                 count = count + 1
