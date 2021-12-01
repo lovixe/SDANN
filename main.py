@@ -24,7 +24,5 @@ nodeCount = config.nodeCount
 while True:
     timeLoop = 0
     for i in range(slotPerSec):
-        for j in range(nodeCount):
-            wn.timeLapse(timeSec, timeLoop)
-        timeLoop = timeLoop + 1
+        wn.timeLapse(timeSec, i)
     timeSec = timeSec + 1
