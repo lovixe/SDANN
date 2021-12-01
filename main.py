@@ -12,7 +12,7 @@ class timeDrive(object):
 
 
 wn = wirelessNode.wirelessNetwork()
-nn = neuronNetworks.neuronNetworks()
+nn = neuronNetworks.neuronNetwork()
 
 wn.setNN(nn)
 

@@ -8,6 +8,7 @@ class sinkNode(object):
         self.id = 0     # 默认SN就是ID为0的节点
         self.nodeCount = config.nodeCount - 1     #除了SN之外的节点数量
         self.maxInforInSingleFrm = config.maxQIInFrm
+        self.cycleWidth = config.maxLiveTime
         self.recvs = []                 #存储本轮内收到的数据包
 
         self.lastLoopRecvs = []         #上一轮收到的数据包
@@ -45,7 +46,7 @@ class sinkNode(object):
         lost = []
         #清理重复的数据包
         recvedTime = []     #记录数据包接受时间
-        QICount = []     #记录数据包携带信息量
+        aggLoss = []        #记录数据包聚合损失情况
         #遍历接受到的数据包
         for item in self.recvs:
             #item 是一个数据包
@@ -53,7 +54,7 @@ class sinkNode(object):
                 #记录数据包的接受时间
                 recvedTime.append(item.timestamp)
                 recvCount = recvCount + 1
-            QICount.append(len(item.packets))
+            aggLoss.append(item.aggGoal)
 
         #计算损失值
         #先计算时间上的损失值。使用的是均方差损失函数。
@@ -65,19 +66,26 @@ class sinkNode(object):
         for i in range(self.nodeCount - recvCount):
             lossTime = lossTime + self.cycleWidth * self.cycleWidth
         lossTime = lossTime / (2 * self.nodeCount)
+        #归于[0,1]
+        lossTime = lossTime / (pow(self.cycleWidth, 2) / 2)
 
         #后计算信息量的损失值。使用的同样是均方差损失函数
         #合并的数量越靠近极限，损失越小。
         lossQI= 0
-        for item in QICount:
-            lossQI = lossQI + (self.maxInforInSingleFrm - item) * (self.maxInforInSingleFrm - item)
+        maxLossQI = (config.maxQIInFrm - 1) * self.cycleWidth
+        for item in aggLoss:
+            if item > maxLossQI:
+                item = maxLossQI
+            lossQI = lossQI + pow(maxLossQI, 2)
 
-        #统计丢失的节点
+        #统计丢失的节点,按最大值处理
         for i in range(self.nodeCount - recvCount):
-            lossQI = lossQI + (self.maxInforInSingleFrm - 1) * (self.maxInforInSingleFrm - 1)
+            lossQI = lossQI + pow(maxLossQI, 2)
 
         # 要除以的个数是接受到的个数以及丢失的个数
         lossQI = lossQI / (2 * self.nodeCount)
+        #归于[0,1]
+        lossQI = lossQI / (pow(maxLossQI, 2) / 2)
 
         #得到损失值向量
         lost.append(lossTime)

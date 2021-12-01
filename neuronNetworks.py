@@ -350,38 +350,28 @@ class WorkState(Enum):
     ON_WAIT_TO_DEL = 4
 
 #神经网络对内接口
-class INN(meteaclass=ABCMeta):
+class INN():
     #获取有哪些节点连接到这个节点
-    @abstractclassmethod
     def getEdgeToNode(self, targetNodeID):pass
 
-    @abstractclassmethod
     def getEdgeFromNode(self, srcID): pass
 
-    @abstractclassmethod
     def getConnectToNode(self, targetNodeID):pass
 
-    @abstractclassmethod
     def setConnectWeight(self, srcID, desID, weight): pass
 
-    @abstractclassmethod
     def delConnect(self, srcID, desID): pass
 
-    @abstractclassmethod
     def addConnect(self, srcID, desID): pass
 
-    @abstractclassmethod
     def getConnectWeight(self, srcID, desID): pass
 
 #神经网络对外接口
-class INeuronNetworks(meteclass=ABCMeta):
-    @abstractclassmethod
+class INeuronNetworks():
     def timeLapse(self, nodeID, timeOffset, inputVector=None): pass
 
-    @abstractclassmethod
     def setLinkGroup(self, linkGroup): pass
 
-    @abstractclassmethod
     def overTransmit(self, packet): pass
 
 class neuronNetwork(INN, INeuronNetworks):
@@ -466,13 +456,7 @@ class neuronNetwork(INN, INeuronNetworks):
 
     #获取节点的连接关系
     def getConnectToNode(self, targetNodeID):
-        result = []
-        for item in self.linkGroup:
-            if item.nodeID == targetNodeID:
-                continue
-            if item.connectToNode(targetNodeID) == True:
-                result.append(item.nodeID)
-        return result
+        return self.linkGroup[targetNodeID]
 
     #修改边的权重
     def setConnectWeight(self, srcID, desID, weight):

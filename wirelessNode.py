@@ -94,7 +94,7 @@ class node(object):
                 self.packet.timeLapse()
                 #因为系统是从前向后扫描，数据是从后向前传递，所以不会出现一个数据包在一个时间槽内被增加了两次的情况
             #本节点是神经网络的连接节点，需要做出神经网络决策的
-            result = self.neuronNetwork.timeLapse(self.nodeID, timeOffset, self.getInputVector())
+            result = self.neuronNetwork.timeLapse(self.nodeID, timeOffset, self.getInputVector(timeOffset))
             if result != None and result != self.nodeID:
                 #需要转发数据，如果是自己，那么忽略就可以
                 self.iwn.sendDataToNode(result, packet)
@@ -136,19 +136,21 @@ class node(object):
             else:
                 return self.packet.hadAgg
 
-class IWN(meteaclass=ABCMeta):
-    @abstractclassmethod
-    def sendDataToNode(self, desID, packet): pass
+class IWN():
+    
+    def sendDataToNode(self, desID, packet): 
+        pass
 
-    @abstractclassmethod
-    def getNodeState(self, desID): pass
+    def getNodeState(self, desID): 
+        pass
 
-    @abstractclassmethod
-    def getNodeQI(self, desID): pass
+    def getNodeQI(self, desID): 
+        pass
 
 
 class wirelessNetwork(IWN):
     def __init__(self) -> None:
+        super().__init__()
         #开始建立网络
         self.nodes = []
         self.nodeCount = config.nodeCount
@@ -195,7 +197,8 @@ class wirelessNetwork(IWN):
                         connects.append(j)
             else:
                 for j in range(i - 3, self.nodeCount - connectRange, 1):
-                    connects.append(j)
+                    if j <= i + 3 and j != i:
+                        connects.append(j)
             self.linkGroup.append(connects)
 
     #接受时间流逝
