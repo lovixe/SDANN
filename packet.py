@@ -36,7 +36,7 @@ class packet(object):
         return True
 
     def getRemainSpace(self):
-        return self.maxNodeCapacity - self.hadAgg
+        return self.maxNodeCapacity - len(self.packets)
 
     #聚合, 输入参数为等待聚合的数据包们
     def aggregation(self, waitAggPackets):
