@@ -70,13 +70,15 @@ class sinkNode(object):
         lossTime = lossTime / (pow(self.cycleWidth, 2) / 2)
 
         #后计算信息量的损失值。使用的同样是均方差损失函数
-        #合并的数量越靠近极限，损失越小。
+        #损失值有上限，设置为最大的单个节点的数据包一直到最大时间才到SN
         lossQI= 0
         maxLossQI = (config.maxQIInFrm - 1) * self.cycleWidth
         for item in aggLoss:
             if item > maxLossQI:
-                item = maxLossQI
-            lossQI = lossQI + pow(maxLossQI, 2)
+                tmp = maxLossQI
+            else:
+                tmp = item
+            lossQI = lossQI + pow(tmp, 2)
 
         #统计丢失的节点,按最大值处理
         for i in range(self.nodeCount - recvCount):
