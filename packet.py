@@ -1,4 +1,5 @@
 from configure import config
+import copy
 
 #单一节点数据包
 class nodePacket(object):
@@ -12,7 +13,7 @@ class nodePacket(object):
             return True
         else:
             return False
-    
+    #无效了返回True， 有效返回False
     def timeLapse(self):
         self.timestamp = self.timestamp + 1
         return self.checkObsolete()
@@ -46,11 +47,24 @@ class packet(object):
         count = 0
         for item in waitAggPackets:
             if self.hadAgg < self.maxNodeCapacity:
-                self.packets.append(item)
+                tmp = copy.deepcopy(item)
+                self.packets.append(tmp)
                 self.hadAgg = self.hadAgg + 1
                 count = count + 1
             else:
                 break
-        #计算聚合得分
-        self.aggGoal = self.aggGoal + (self.maxLiveTime - self.timestamp) * count
+        #计算聚合得分,未到时前都算积分，到时间后不在计算
+        if self.maxLiveTime > self.timestamp:
+            self.aggGoal = self.aggGoal + (self.maxLiveTime - self.timestamp) * count
         return count
+
+    def addQI(self, node):
+        if self.getRemainSpace() > 0:
+            tmp = copy.deepcopy(node)
+            self.packets.append(tmp)
+            self.hadAgg = self.hadAgg + 1
+            if self.maxLiveTime > self.timestamp:
+                self.aggGoal = self.aggGoal + (self.maxLiveTime - self.timestamp)
+            return True
+        else:
+            return False

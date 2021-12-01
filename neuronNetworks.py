@@ -381,6 +381,9 @@ class INeuronNetworks(meteclass=ABCMeta):
     @abstractclassmethod
     def setLinkGroup(self, linkGroup): pass
 
+    @abstractclassmethod
+    def overTransmit(self, packet): pass
+
 class neuronNetwork(INN, INeuronNetworks):
     #maxInfroInSingleFrm 是单帧最大值，根据使用的协议以及压缩算法确定
     def __init__(self) -> None:
@@ -436,6 +439,9 @@ class neuronNetwork(INN, INeuronNetworks):
         else:
             result = self.nodes[nodeID].timeLapse(inputVector)
         return result
+
+    def overTransmit(self, packet):
+        self.SN.recvPacket(packet)
     
     #获取上一轮的状态，在SN的日常任务后，如果不为None，可以获取到
     def getSNStates(self):
