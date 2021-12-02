@@ -107,23 +107,27 @@ class node(object):
     #接收到其他节点的信息
     def recvData(self, packet):
         #这是很重要的一部分，完成之后，就可以进行测试了.
-        tmp = copy.deepcopy(packet)
-        if self.packet == None:
-            #本身没有数据，那么直接用就可以
-            self.packet = tmp
+        #如果是SN节点，那么直接给SN节点就可以了
+        if self.nodeID == 0:
+            self.neuronNetwork.overTransmit(packet)
         else:
-            #进行合并，如果满了就开一个新的了
-            count = self.packet.aggregation(tmp)
-            if count < len(tmp.packets):
-                #未能全部完成聚合
-                del tmp.packets[0:count]
-                self.neuronNetwork.overTransmit(self.packet)
+            tmp = copy.deepcopy(packet)
+            if self.packet == None:
+                #本身没有数据，那么直接用就可以
                 self.packet = tmp
             else:
-                #完成聚合了，那么这个tmp就没有什么用途了
-                if self.packet.getRemainSpace() == 0:
+                #进行合并，如果满了就开一个新的了
+                count = self.packet.aggregation(tmp)
+                if count < len(tmp.packets):
+                    #未能全部完成聚合
+                    del tmp.packets[0:count]
                     self.neuronNetwork.overTransmit(self.packet)
-                    self.packet = None
+                    self.packet = tmp
+                else:
+                    #完成聚合了，那么这个tmp就没有什么用途了
+                    if self.packet.getRemainSpace() == 0:
+                        self.neuronNetwork.overTransmit(self.packet)
+                        self.packet = None
 
     #获取信息量
     def getQI(self):
