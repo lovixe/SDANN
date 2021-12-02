@@ -10,11 +10,13 @@ class sinkNode(object):
         self.maxInforInSingleFrm = config.maxQIInFrm
         self.cycleWidth = config.maxLiveTime
         self.recvs = []                 #存储本轮内收到的数据包
+        self.dataCreateCycle = config.dataGeneralCycle
 
         self.lastLoopRecvs = []         #上一轮收到的数据包
         self.lastLossValue = 1
 
         self.timeOffset = 0
+        self.timeSec = 0
 
     def recvPacket(self, packet):
         #SN节点的数据包，已经完成了传输，不再进行时间流逝
@@ -26,17 +28,21 @@ class sinkNode(object):
     def timeLapse(self, timeOffset):
         self.timeOffset = timeOffset
         if timeOffset == 0:
-            #已经到了最新的一节了，计算上一次的情况
-            lost = self.calcLost()
-            self.lastLossValue = lost
+            self.timeSec = self.timeSec + 1
+            if self.timeSec % self.dataCreateCycle == 0:
+                #已经到了最新的一节了，计算上一次的情况
+                lost = self.calcLost()
+                self.lastLossValue = lost
 
-            self.lastLoopRecvs.clear()
-            for item in self.recvs:
-                self.lastLoopRecvs.append(item)
+                self.lastLoopRecvs.clear()
+                for item in self.recvs:
+                    self.lastLoopRecvs.append(item)
 
-            #清理现有的记录
-            self.recvs.clear()
-            return lost
+                #清理现有的记录
+                self.recvs.clear()
+                return lost
+            else:
+                return None
         else:
             return None
 
