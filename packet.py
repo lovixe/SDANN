@@ -24,7 +24,6 @@ class packet(object):
         self.packets = []
         self.maxNodeCapacity = config.maxQIInFrm  #最多可以包括多少个节点的信息
         self.aggLoss = 0                        #当其中的节点数据包因为超时后也不会允许再次聚合
-        self.recvTimeOffset = 0             #接受时间戳
 
     #时间流逝, 当返回False，表示这个数据包已经超时了。当返回True时，表明这个数据包正常
     def timeLapse(self):

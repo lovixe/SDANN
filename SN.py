@@ -21,8 +21,6 @@ class sinkNode(object):
 
     def recvPacket(self, packet):
         #SN节点的数据包，已经完成了传输，不再进行时间流逝
-        packet.recvTimeOffset = self.timeOffset
-
         self.recvs.append(copy.deepcopy(packet))
 
     #不断的调用这个函数，SN需要自己在何时的时候计算损失值
