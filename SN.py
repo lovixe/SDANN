@@ -12,6 +12,7 @@ class sinkNode(object):
         self.cycleWidth = config.maxLiveTime
         self.recvs = []                 #存储本轮内收到的数据包
         self.dataCreateCycle = config.dataGeneralCycle
+        self.slotPerSec = config.slotPerSec
 
         self.lastLoopRecvs = []         #上一轮收到的数据包
         self.lastLossValue = 1
@@ -29,7 +30,7 @@ class sinkNode(object):
         self.timeOffset = timeOffset
         if timeOffset == 0:
             self.timeSec = self.timeSec + 1
-            if self.timeSec % self.dataCreateCycle == 0:
+            if self.timeSec == self.dataCreateCycle and timeOffset == self.slotPerSec - 1:
                 #已经到了最新的一节了，计算上一次的情况
                 lost = self.calcLost()
                 self.lastLossValue = lost
@@ -58,7 +59,7 @@ class sinkNode(object):
             #item 是一个数据包
             for node in item.packets:
                 #记录数据包的接受时间
-                recvedTime.append(item.timestamp)
+                recvedTime.append(node.timestamp)
                 recvCount = recvCount + 1
             aggLoss.append(item.aggGoal)
 
