@@ -133,7 +133,7 @@ class node(object):
             if self.packet == None:
                 return 0
             else:
-                return len(self.packet)
+                return len(self.packet.packets)
 
 class IWN():
     
