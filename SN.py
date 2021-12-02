@@ -1,6 +1,7 @@
 #神经网络出口，神经元可以建立与出口的连接。出口有自己的运行逻辑以区别与普通的神经元节点。
 import packet
 from configure import config
+import copy
 
 
 class sinkNode(object):
@@ -21,7 +22,8 @@ class sinkNode(object):
     def recvPacket(self, packet):
         #SN节点的数据包，已经完成了传输，不再进行时间流逝
         packet.recvTimeOffset = self.timeOffset
-        self.recvs.append(packet)
+
+        self.recvs.append(copy.deepcopy(packet))
 
     #不断的调用这个函数，SN需要自己在何时的时候计算损失值
     #更新了一轮，则返回损失值，否则返回None
