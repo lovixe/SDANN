@@ -53,12 +53,14 @@ class node(object):
         #检查是否满了
         if self.packet.getRemainSpace() == 0:
             self.neuronNetwork.overTransmit(self.packet)
+            self.packet = None
 
     #在散点时，将数据包发送给最近的非散点
     def sendDataToConnected(self):
         for item in self.linkGroup[self.nodeID]:
             if self.iwn.getNodeState(item) == States.CONNECTED:
                 self.iwn.sendDataToNode(item, self.packet)
+                self.packet = None
                 return
         #如果附近真的没有，那么直接清空缓存吧
         self.packet = None
@@ -79,7 +81,7 @@ class node(object):
     #时间流逝
     def timeLapse(self, timeSec, timeOffset):
         #检查是否需要产生数据
-        if timeSec == self.createDataTimeSec and timeOffset == self.createDataTimeSlot:
+        if (timeSec % self.dataGeneralCycle) == self.createDataTimeSec and timeOffset == self.createDataTimeSlot:
             self.createData()
         
         #做出决策，如果是散点，那么传输数据就完事了。如果不是散点，那么需要整理数据并给神经网络做出决策

@@ -28,9 +28,9 @@ class sinkNode(object):
     #更新了一轮，则返回损失值，否则返回None
     def timeLapse(self, timeOffset):
         self.timeOffset = timeOffset
-        if timeOffset == 0:
+        if timeOffset == self.slotPerSec - 1:
             self.timeSec = self.timeSec + 1
-            if self.timeSec == self.dataCreateCycle and timeOffset == self.slotPerSec - 1:
+            if self.timeSec % self.dataCreateCycle == 0:
                 #已经到了最新的一节了，计算上一次的情况
                 lost = self.calcLost()
                 self.lastLossValue = lost
@@ -61,7 +61,7 @@ class sinkNode(object):
                 #记录数据包的接受时间
                 recvedTime.append(node.timestamp)
                 recvCount = recvCount + 1
-            aggLoss.append(item.aggGoal)
+            aggLoss.append(item.aggLoss)
 
         #计算损失值
         #先计算时间上的损失值。使用的是均方差损失函数。
