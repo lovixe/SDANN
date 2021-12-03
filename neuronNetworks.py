@@ -69,13 +69,13 @@ class estimatorEdge(object):
         if self.weightGroup[self.testIndex].getComplete() == True:
             self.testIndex = self.testIndex + 1
             
-            if self.testIndex == len(self.weightGroup) - 1:
+            if self.testIndex == len(self.weightGroup):
                 self.complete = True
                 #完成后要删除自己添加的那一条边
                 self.INN.delConnect(self.sourceID, self.desID)
             
-            #测试完了一组，需要设置新的权重
-            self.INN.setConnectWeight(self.sourceID, self.desID, self.weightGroup[self.testIndex].getWeight())
+        #测试完了一组，需要设置新的权重
+        self.INN.setConnectWeight(self.sourceID, self.desID, self.weightGroup[self.testIndex].getWeight())
 
     #获得评估结果, 返回最佳的权重组以及对应的值
     def getResult(self):
