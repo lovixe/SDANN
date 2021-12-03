@@ -24,7 +24,7 @@ class estimatorWeight(object):
         self.testIndex = self.testIndex + 1
         if self.testIndex == self.testCount:
             #完成
-            self.hadTested = True
+            self.complete = True
 
     #计算均方误差
     def rmse(value):
@@ -66,7 +66,7 @@ class estimatorEdge(object):
     def addResult(self, lostValue):
         #找到正在测试的权重，然后把结果给它
         self.weightGroup[self.testIndex].addResult(lostValue)
-        if self.weightGroup[self.testIndex].getComplete == True:
+        if self.weightGroup[self.testIndex].getComplete() == True:
             self.testIndex = self.testIndex + 1
             
             if self.testIndex == len(self.weightGroup):
