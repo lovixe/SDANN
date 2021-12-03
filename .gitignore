@@ -6,3 +6,6 @@
 
 #Ignore test file
 test.py
+
+#Ignore log file
+*.txt

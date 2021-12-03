@@ -8,6 +8,7 @@ from edge import edge
 from configure import config
 import numpy as np
 import random
+from logger import logger
 
 #一个权重的评估
 class estimatorWeight(object):
@@ -21,6 +22,7 @@ class estimatorWeight(object):
     #增加一个结果
     def addResult(self, lostValue):
         self.testResult.append(lostValue)
+        logger.logger.debug("结果：" + str(lostValue))
         self.testIndex = self.testIndex + 1
         if self.testIndex == self.testCount:
             #完成
@@ -61,7 +63,9 @@ class estimatorEdge(object):
     def active(self):
         #这条边被激活，需要自己新加这条边。然后设置权重
         self.INN.addConnect(self.sourceID, self.desID)
+        logger.logger.debug('增加边线：' + str(self.sourceID) + ' 至 ' + str(self.desID))
         self.INN.setConnectWeight(self.sourceID, self.desID, self.weightGroup[self.testIndex].getWeight())
+        logger.logger.debug('修改权重：' + str(self.sourceID) + ' 至 ' + str(self.desID) + ' : ' + str(self.weightGroup[self.testIndex].getWeight()))
 
     #增加一个评估结果
     def addResult(self, lostValue):
@@ -74,10 +78,12 @@ class estimatorEdge(object):
                 self.complete = True
                 #完成后要删除自己添加的那一条边
                 self.INN.delConnect(self.sourceID, self.desID)
+                logger.logger.debug('删除边线：' + str(self.sourceID) + ' 至 ' + str(self.desID))
                 return
             
             #测试完了一组，需要设置新的权重
             self.INN.setConnectWeight(self.sourceID, self.desID, self.weightGroup[self.testIndex].getWeight())
+            logger.logger.debug('修改权重：' + str(self.sourceID) + ' 至 ' + str(self.desID) + ' : ' + str(self.weightGroup[self.testIndex].getWeight()))
 
     #获得评估结果, 返回最佳的权重组以及对应的值
     def getResult(self):
@@ -198,10 +204,12 @@ class addEdgeWorker(object):
 
         if len(wnConnect) == 0:
             self.complete = True
+            logger.logger.debug('已经到达尾部节点')
             return False   #到头了
 
         #没有到头，那就随机的找一个
         randomValue = random.randint(0,len(wnConnect))
+        logger.logger.debug('延长至节点' + str(wnConnect[randomValue]))
         self.curAddNode = estimatorNode(wnConnect[randomValue], self.INN)
         if self.curAddNode.getComplete() == True:
             return self.getNextNode()
