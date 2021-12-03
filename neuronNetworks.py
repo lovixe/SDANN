@@ -69,7 +69,7 @@ class estimatorEdge(object):
         if self.weightGroup[self.testIndex].getComplete() == True:
             self.testIndex = self.testIndex + 1
             
-            if self.testIndex == len(self.weightGroup):
+            if self.testIndex == len(self.weightGroup) - 1:
                 self.complete = True
                 #完成后要删除自己添加的那一条边
                 self.INN.delConnect(self.sourceID, self.desID)
