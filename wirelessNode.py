@@ -97,7 +97,7 @@ class node(object):
             result = self.neuronNetwork.timeLapse(self.nodeID, timeOffset, self.getInputVector(timeOffset))
             if result != None and result != self.nodeID and self.nodeID != 0:
                 #需要转发数据，如果是自己，那么忽略就可以
-                self.iwn.sendDataToNode(result, packet)
+                self.iwn.sendDataToNode(result, self.packet)
                 self.packet = None
 
     #设置NN
