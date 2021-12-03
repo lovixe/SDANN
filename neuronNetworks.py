@@ -27,10 +27,11 @@ class estimatorWeight(object):
             self.complete = True
 
     #计算均方误差
-    def rmse(value):
+    def rmse(self,value):
+        value = np.array(value)
         return np.sqrt(((value) ** 2).mean())
 
-    #获取评估结果,这里是取均值
+    #获取评估结果,这里是取均值 
     def getResult(self):
         return self.rmse(self.testResult)
 
@@ -73,9 +74,10 @@ class estimatorEdge(object):
                 self.complete = True
                 #完成后要删除自己添加的那一条边
                 self.INN.delConnect(self.sourceID, self.desID)
+                return
             
-        #测试完了一组，需要设置新的权重
-        self.INN.setConnectWeight(self.sourceID, self.desID, self.weightGroup[self.testIndex].getWeight())
+            #测试完了一组，需要设置新的权重
+            self.INN.setConnectWeight(self.sourceID, self.desID, self.weightGroup[self.testIndex].getWeight())
 
     #获得评估结果, 返回最佳的权重组以及对应的值
     def getResult(self):
@@ -141,8 +143,9 @@ class estimatorNode(object):
             self.edgeIndex = self.edgeIndex + 1
             if self.edgeIndex == len(self.edges):
                 self.complete = True
-            #还有，就继续激活下一条边
-            self.edges[self.edgeIndex].active()
+            else:
+                #还有，就继续激活下一条边
+                self.edges[self.edgeIndex].active()
 
     #获取测试结果, 返回最佳的源节点、权重组
     def getResult(self):
@@ -205,6 +208,10 @@ class addEdgeWorker(object):
         else:
             return True
 
+    #获取上次结果的转换值
+    def getLastLoss(self):
+        value = np.array(self.lastLoss)
+        return np.sqrt(((value) ** 2).mean()) 
 
     #完成了增加边界任务，返回True。 未完成就返回False
     def addResult(self, lossValue):
@@ -216,7 +223,7 @@ class addEdgeWorker(object):
         if self.curAddNode.getComplete() == True:
             #获取最佳的结构，并更新到实际的网络中
             opSrcID, opWeight, opValue = self.curAddNode.getResult()
-            if opValue < self.lastLoss:
+            if opValue < self.getLastLoss():
                 self.lastLoss = opValue
                 self.INN.addConnect(opSrcID, self.curAddNode.nodeID)
                 self.INN.setConnectWeight(opSrcID, self.curAddNode.nodeID, opWeight)
