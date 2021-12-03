@@ -21,8 +21,8 @@ class estimatorWeight(object):
     #增加一个结果
     def addResult(self, lostValue):
         self.testResult.append(lostValue)
-        self.testCount = self.testCount + 1
-        if self.testCount == 4:
+        self.testIndex = self.testIndex + 1
+        if self.testIndex == self.testCount:
             #完成
             self.hadTested = True
 
