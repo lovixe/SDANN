@@ -22,6 +22,8 @@ class neuronNode(object):
             newEdge.setWeight(weight)
         #添加并修改状态
         self.edges.append(newEdge)
+        if newEdge.fromID == 0 and newEdge.toID == 0:
+            pass
         self.state = States.CONNECTED
 
     #删除一条边
@@ -83,6 +85,7 @@ class neuronNode(object):
         result.append(inputVector[str(fromID)])
         result.append(inputVector[str(toID)])
         result.append(inputVector['timeOffset'])
+        return result
 
     #每过一段时间时，就会触发。参数为当前的时间偏移,以及当前节点感知到的其他节点的信息量
     def timeLapse(self, inputVector):

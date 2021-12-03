@@ -23,11 +23,6 @@ class node(object):
         self.createDataTimeSec = random.randint(0, self.dataGeneralCycle - 1)
         self.createDataTimeSlot = random.randint(0, self.slotPerSecond - 1)
 
-        if self.nodeID != 0:
-            self.state = States.SCATTERED   #默认除了SN都是散点
-        else:
-            self.state = States.CONNECTED
-
     #检查满了的数据包
     def checkFull(self):
         if self.packet.getRemainSpace() == 0:
@@ -41,6 +36,9 @@ class node(object):
     #产生数据
     def createData(self):
         #因为只有不全的packet，所以需要合并
+        if self.nodeID == 0:
+            return
+
         if self.packet == None:
             #产生一个新的packet
             self.packet = packet()
@@ -85,7 +83,7 @@ class node(object):
             self.createData()
         
         #做出决策，如果是散点，那么传输数据就完事了。如果不是散点，那么需要整理数据并给神经网络做出决策
-        if self.state == States.SCATTERED:
+        if self.iwn.getNodeState(self.nodeID) == States.SCATTERED:
             #散点
             if self.packet != None:
                 #查找最近的非散点，把数据给他
@@ -179,7 +177,7 @@ class wirelessNetwork(IWN):
 
     #获取节点状态
     def getNodeState(self, desID):
-        return self.nodes[desID].state
+        return self.neuronNetwork.getNodeState(desID)
 
     #获取节点信息量
     def getNodeQI(self, desID):

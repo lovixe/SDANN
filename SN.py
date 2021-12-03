@@ -1,12 +1,15 @@
 #神经网络出口，神经元可以建立与出口的连接。出口有自己的运行逻辑以区别与普通的神经元节点。
+from neuron import States
 import packet
 from configure import config
 import copy
+import neuron
 
 
-class sinkNode(object):
-    def __init__(self) -> None:
+class sinkNode(neuron.neuronNode):
+    def __init__(self, id) -> None:
         self.id = 0     # 默认SN就是ID为0的节点
+        self.nodeID = 0
         self.nodeCount = config.nodeCount - 1     #除了SN之外的节点数量
         self.maxInforInSingleFrm = config.maxQIInFrm
         self.cycleWidth = config.maxLiveTime
@@ -19,6 +22,8 @@ class sinkNode(object):
 
         self.timeOffset = 0
         self.timeSec = 0
+        self.edges = []
+        self.state = States.CONNECTED
 
     def recvPacket(self, packet):
         #SN节点的数据包，已经完成了传输，不再进行时间流逝

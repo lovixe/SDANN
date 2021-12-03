@@ -389,13 +389,16 @@ class INeuronNetworks():
 
     def overTransmit(self, packet): pass
 
+    def getNodeState(self, desID): pass
+
 class neuronNetwork(INN, INeuronNetworks):
     #maxInfroInSingleFrm 是单帧最大值，根据使用的协议以及压缩算法确定
     def __init__(self) -> None:
         nodeCount = config.nodeCount - 1    #需要减去SN的占位
-        self.SN = sinkNode()
+        self.SN = sinkNode(0)
 
         self.nodes = []                             #拥有的神经元节点，  注意：不是所有的神经元都加入到网络中并发挥了作用
+        self.nodes.append(self.SN)          #占位，省的错乱
 
         self.linkGroup = None
 
@@ -406,13 +409,17 @@ class neuronNetwork(INN, INeuronNetworks):
 
         #产生神经元
         for i in range(nodeCount):
-            item = neuronNode(i)
+            item = neuronNode(i + 1)
             #按照顺序添加
             self.nodes.append(item)
 
     #设置连接
     def setLinkGroup(self, linkGroup):
         self.linkGroup = linkGroup
+
+    #获取节点状态
+    def getNodeState(self, desID):
+        return self.nodes[desID].state
 
 
     #调用节点的时间流逝

@@ -13,7 +13,7 @@ class edge(object):
     #计算该链路通路结果, 传递的信息是当前节点的信息量
     def calc(self, inputVector):
         #按照权重计算结果
-        return np.sum(np.multiply(inputVector, self.linkWeight.getWeight()))
+        return np.sum(np.multiply(inputVector, self.linkWeight))
 
     #配置权重，不配置就用默认的
     def setWeight(self, weight):
