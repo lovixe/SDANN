@@ -1,6 +1,7 @@
 #这个文件是神经元的类
 import random
 from edge import edge
+import numpy as np
 
 from enum import Enum
 
@@ -94,15 +95,19 @@ class neuronNode(object):
             return None
 
         #这里就是计算是否需要做出决断的了,做法是将计算各自的权重然后取最高的动作。
-        max = 0.0
+
+        #先计算给自己的，默认是0.5，这是一个超参
+        toSelfWeight=[0.5,0.5,0.5]
+        toSelfInputVector = self.getInputVector(inputVector, self.nodeID, self.nodeID)
+        toSelf = np.sum(np.multiply(toSelfInputVector, toSelfWeight))
         connectID = None
 
         #TO-DO 提取出对应的数据，应为对应不同的节点是不一样的
 
         for item in self.edges:
             result = item.calc(self.getInputVector(inputVector, self.nodeID, item.toID))
-            if result > max:
-                max = result
+            if result > toSelf:
+                toSelf = result
                 connectID = item.toID
         
         #这里的激活函数的中间计算过程，只有一个1，其他都是0. 为0不用处理，为1就是需要处理的
