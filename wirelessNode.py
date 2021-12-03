@@ -93,12 +93,12 @@ class node(object):
             if self.packet != None:
                 self.packet.timeLapse()
                 #因为系统是从前向后扫描，数据是从后向前传递，所以不会出现一个数据包在一个时间槽内被增加了两次的情况
-            #本节点是神经网络的连接节点，需要做出神经网络决策的
-            result = self.neuronNetwork.timeLapse(self.nodeID, timeOffset, self.getInputVector(timeOffset))
-            if result != None and result != self.nodeID and self.nodeID != 0:
-                #需要转发数据，如果是自己，那么忽略就可以
-                self.iwn.sendDataToNode(result, self.packet)
-                self.packet = None
+                #本节点是神经网络的连接节点，需要做出神经网络决策的
+                result = self.neuronNetwork.timeLapse(self.nodeID, timeOffset, self.getInputVector(timeOffset))
+                if result != None and result != self.nodeID and self.nodeID != 0:
+                    #需要转发数据，如果是自己，那么忽略就可以
+                    self.iwn.sendDataToNode(result, self.packet)
+                    self.packet = None
 
     #设置NN
     def setNeuronNetwork(self, nn):
