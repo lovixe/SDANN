@@ -7,6 +7,7 @@ from packet import packet
 from packet import nodePacket
 from neuron import States
 import copy
+from logger import logger
 
 class node(object):
     def __init__(self, nodeID, linkGroup, iwn) -> None:
@@ -57,6 +58,7 @@ class node(object):
     def sendDataToConnected(self):
         for item in self.linkGroup[self.nodeID]:
             if self.iwn.getNodeState(item) == States.CONNECTED:
+                logger.logger.info('发送数据包: ' + str(self.nodeID) + ' -> ' + str(item))
                 self.iwn.sendDataToNode(item, self.packet)
                 self.packet = None
                 return
@@ -95,11 +97,14 @@ class node(object):
                 #因为系统是从前向后扫描，数据是从后向前传递，所以不会出现一个数据包在一个时间槽内被增加了两次的情况
                 #本节点是神经网络的连接节点，需要做出神经网络决策的
                 result = self.neuronNetwork.timeLapse(self.nodeID, timeOffset, self.getInputVector(timeOffset))
-                if result != None and result != self.nodeID and self.nodeID != 0:
+                if result != None and result != self.nodeID:
                     #需要转发数据，如果是自己，那么忽略就可以
+                    logger.logger.info('发送数据包: ' + str(self.nodeID) + ' -> ' + str(result))
                     self.iwn.sendDataToNode(result, self.packet)
                     self.packet = None
-
+            
+            if self.nodeID == 0:
+                self.neuronNetwork.timeLapse(self.nodeID, timeOffset)
     #设置NN
     def setNeuronNetwork(self, nn):
         self.neuronNetwork = nn
@@ -108,6 +113,7 @@ class node(object):
     def recvData(self, packet):
         #这是很重要的一部分，完成之后，就可以进行测试了.
         #如果是SN节点，那么直接给SN节点就可以了
+        logger.logger.info('接受数据包: ' + str(self.nodeID) + ' -> ' + str(packet.packets[0].nodeID))
         if self.nodeID == 0:
             self.neuronNetwork.overTransmit(packet)
         else:

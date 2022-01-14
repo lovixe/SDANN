@@ -3,6 +3,7 @@ import unittest
 from packet import nodePacket
 from packet import packet
 from configure import config
+import numpy as np
 
 class TestConfigure(unittest.TestCase):
     def test_weight(self):

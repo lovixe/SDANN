@@ -29,3 +29,4 @@ while True:
     for i in range(slotPerSec):
         wn.timeLapse(timeSec, i)
     timeSec = timeSec + 1
+
