@@ -75,6 +75,11 @@ class estimatorEdge(object):
             self.testIndex = self.testIndex + 1
             
             if self.testIndex == len(self.weightGroup):
+                # if self.desID > 10:
+                #     self.testIndex = self.testIndex - 1
+                #     logger.logger.debug('修改权重：' + str(self.sourceID) + ' 至 ' + str(self.desID) + ' : ' + str(self.weightGroup[self.testIndex].getWeight()))
+                #     return
+                # else:
                 self.complete = True
                 #完成后要删除自己添加的那一条边
                 self.INN.delConnect(self.sourceID, self.desID)
@@ -130,7 +135,7 @@ class estimatorNode(object):
             self.complete = True
             return
 
-        #查找还没有连接的比自己ID大的节点
+        #查找还没有连接的比自己ID大的节点,有的话，就作为候选
         for item in wnConnect:
             if (item not in nnConnect) and (item > self.nodeID):
                 self.edges.append(estimatorEdge(item, self.nodeID, self.INN))
@@ -208,10 +213,14 @@ class addEdgeWorker(object):
             return False   #到头了
 
         #没有到头，那就随机的找一个
-        randomValue = random.randint(0,len(wnConnect))
+        randomValue = random.randint(0,len(wnConnect) - 1)
+        
+
+
         logger.logger.debug('延长至节点' + str(wnConnect[randomValue]))
         self.curAddNode = estimatorNode(wnConnect[randomValue], self.INN)
-        if self.curAddNode.getComplete() == True:
+        #判断节点是否完成或者是否是一个散点，是的话都不具备作为候选的可能
+        if self.curAddNode.getComplete() == True or self.INN.getNodeState(self.curAddNode.nodeID) == States.SCATTERED:
             return self.getNextNode()
         else:
             return True
@@ -232,12 +241,25 @@ class addEdgeWorker(object):
             #获取最佳的结构，并更新到实际的网络中
             opSrcID, opWeight, opValue = self.curAddNode.getResult()
             if opValue < self.getLastLoss():
+                logger.logger.info('节点测试完成，新增连接从' + str(opSrcID) + ' 到 ' + str(self.curAddNode) + '. 权重为 ' + str(opWeight))
+                logger.logger.info('原有损失值为 ' + str(self.lastLoss) + ' 新损失值为 ' + str(opValue))
                 self.lastLoss = opValue
+                
                 self.INN.addConnect(opSrcID, self.curAddNode.nodeID)
                 self.INN.setConnectWeight(opSrcID, self.curAddNode.nodeID, opWeight)
 
-            #因为已经完成了，所以切换到下一个节点上
-            self.getNextNode()   
+                if opSrcID == 26:
+                    if self.curAddNode.nodeID == 1000:
+                        return 
+                self.curAddNode = estimatorNode(opSrcID, self.INN)
+
+                #如果选择的节点已经没有添加边线的可能了，那么继续寻找下一个节点
+                if self.curAddNode.complete == True:
+                    if self.getNextNode() == False:
+                        self.complete = True  
+            else:
+                #没有得到最低的，那么就不能从后往前延伸了。本次添加完成
+                self.complete = True
 
 
 #删除的边的情况
@@ -436,6 +458,10 @@ class neuronNetwork(INN, INeuronNetworks):
 
                 elif self.state == WorkState.ON_ADD_EDGE:
                     self.addEdgeWorker.addResult(result)
+                    #if self.addEdgeWorker.complete == True:
+                        #本次添加任务已经完成了。
+                        #self.addEdgeWorker = addEdgeWorker(self, result)
+                        #TO-DO
                     if self.addEdgeWorker.complete == True:
                         self.state = WorkState.ON_WAIT_TO_DEL
 

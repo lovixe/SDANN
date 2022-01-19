@@ -4,6 +4,7 @@ import packet
 from configure import config
 import copy
 import neuron
+from logger import logger
 
 
 class sinkNode(neuron.neuronNode):
@@ -27,8 +28,6 @@ class sinkNode(neuron.neuronNode):
 
     def recvPacket(self, packet):
         #SN节点的数据包，已经完成了传输，不再进行时间流逝
-        if len(self.recvs) > 4:
-            self.recvs.clear()
         self.recvs.append(copy.deepcopy(packet))
 
     #不断的调用这个函数，SN需要自己在何时的时候计算损失值
@@ -45,6 +44,10 @@ class sinkNode(neuron.neuronNode):
                 self.lastLoopRecvs.clear()
                 for item in self.recvs:
                     self.lastLoopRecvs.append(item)
+                    recvListID = ''
+                    for xxx in item.packets:
+                        recvListID = recvListID + str(xxx.nodeID) + ','
+                    logger.logger.info('SN 接收到的数据包列表 ' + recvListID)
 
                 #清理现有的记录
                 self.recvs.clear()

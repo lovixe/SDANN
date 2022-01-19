@@ -41,7 +41,7 @@ class packet(object):
     #聚合, 输入参数为等待聚合的数据包们
     def aggregation(self, waitAggPackets):
         count = 0
-        for item in waitAggPackets:
+        for item in waitAggPackets.packets:
             if len(self.packets) < self.maxNodeCapacity:
                 tmp = copy.deepcopy(item)
                 self.packets.append(tmp)

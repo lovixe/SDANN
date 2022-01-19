@@ -58,7 +58,7 @@ class node(object):
     def sendDataToConnected(self):
         for item in self.linkGroup[self.nodeID]:
             if self.iwn.getNodeState(item) == States.CONNECTED:
-                logger.logger.info('发送数据包: ' + str(self.nodeID) + ' -> ' + str(item))
+                #logger.logger.info('散点发送数据包: ' + str(self.nodeID) + ' -> ' + str(item))
                 self.iwn.sendDataToNode(item, self.packet)
                 self.packet = None
                 return
@@ -99,7 +99,11 @@ class node(object):
                 result = self.neuronNetwork.timeLapse(self.nodeID, timeOffset, self.getInputVector(timeOffset))
                 if result != None and result != self.nodeID:
                     #需要转发数据，如果是自己，那么忽略就可以
-                    logger.logger.info('发送数据包: ' + str(self.nodeID) + ' -> ' + str(result))
+
+                    listNode = ''
+                    for item in self.packet.packets:
+                        listNode = listNode + str(item.nodeID) + ','
+                    #logger.logger.info('发送数据包: ' + str(self.nodeID) + ' -> ' + str(result) + '. 包括 ' + listNode)
                     self.iwn.sendDataToNode(result, self.packet)
                     self.packet = None
             
@@ -113,7 +117,6 @@ class node(object):
     def recvData(self, packet):
         #这是很重要的一部分，完成之后，就可以进行测试了.
         #如果是SN节点，那么直接给SN节点就可以了
-        logger.logger.info('接受数据包: ' + str(self.nodeID) + ' -> ' + str(packet.packets[0].nodeID))
         if self.nodeID == 0:
             self.neuronNetwork.overTransmit(packet)
         else:
@@ -205,7 +208,7 @@ class wirelessNetwork(IWN):
                     for j in range(i - 3, self.nodeCount):
                         connects.append(j)
             else:
-                for j in range(i - 3, self.nodeCount - connectRange, 1):
+                for j in range(i - 3, self.nodeCount, 1):
                     if j <= i + 3 and j != i:
                         connects.append(j)
             self.linkGroup.append(connects)
