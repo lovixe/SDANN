@@ -15,6 +15,7 @@ class neuronNode(object):
         self.nodeID = id
         self.edges = []         #与其他节点的连接记录, 里面的内容是连接的节点
         self.state = States.SCATTERED   #初始化时都是散点状态
+        self.selfWeight = [0.2,0.2,0.2]   #所有节点的初始化的给自己的权重
 
     #增加一条边
     def addEdge(self, des, weight = None):
@@ -96,13 +97,10 @@ class neuronNode(object):
 
         #这里就是计算是否需要做出决断的了,做法是将计算各自的权重然后取最高的动作。
 
-        #先计算给自己的，默认是0.5，这是一个超参
-        toSelfWeight=[0.5,0.5,0.5]
+        #先计算给自己的
         toSelfInputVector = self.getInputVector(inputVector, self.nodeID, self.nodeID)
-        toSelf = np.sum(np.multiply(toSelfInputVector, toSelfWeight))
+        toSelf = np.sum(np.multiply(toSelfInputVector, self.selfWeight))
         connectID = None
-
-        #TO-DO 提取出对应的数据，应为对应不同的节点是不一样的
 
         for item in self.edges:
             result = item.calc(self.getInputVector(inputVector, self.nodeID, item.toID))
