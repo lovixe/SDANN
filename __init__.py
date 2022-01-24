@@ -54,10 +54,11 @@ while True:
     oriID = nnWorkState[1][0]
     desID = nnWorkState[1][1]
 
-    showOut = showOut + ' 起始测试ID：' + str(oriID) + ' 终点ID： ' + str(desID) + ' 稳定下损失值: ' + str(nn.getCurStableLoss()) + '\n'
+    if nnWorkState[0] == neuronNetworks.WorkState.ON_ADJUST_WEIGHT:
+      showOut = showOut + ' 调整权重节点: ' + str(oriID) + ' 当前测试权重: ' + str(desID) + ' 稳定下损失值: ' + str(nn.getCurStableLoss()) + '\n' 
+    else:
+      showOut = showOut + ' 起始测试ID：' + str(oriID) + ' 终点ID： ' + str(desID) + ' 稳定下损失值: ' + str(nn.getCurStableLoss()) + '\n'
 
-    if desID == 6:
-      pass
 
     for i in range(config.nodeCount):
       if i == oriID:

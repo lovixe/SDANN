@@ -124,6 +124,11 @@ class estimatorNode(object):
         self.complete = False
         self.INN = INN
 
+        #散点不能作为目标节点
+        if INN.getNodeState(nodeID) == States.SCATTERED:
+            self.complete = True
+            return
+
         #获取到所有的可新建连接的边
 
         #先获取到所有的连接到这个节点的节点,指的是神经网络
@@ -179,6 +184,10 @@ class estimatorNode(object):
     #获取节点ID
     def getNodeID(self):
         return self.nodeID
+
+    #返回测试起始节点
+    def getEdge(self):
+        return self.edges[self.edgeIndex].sourceID, self.nodeID
   
 
 #这个类是进行增加边界工作的
@@ -214,8 +223,6 @@ class addEdgeWorker(object):
 
         #没有到头，那就随机的找一个
         randomValue = random.randint(0,len(wnConnect) - 1)
-        
-
 
         logger.logger.debug('延长至节点' + str(wnConnect[randomValue]))
         self.curAddNode = estimatorNode(wnConnect[randomValue], self.INN)
@@ -229,6 +236,10 @@ class addEdgeWorker(object):
     def getLastLoss(self):
         value = np.array(self.lastLoss)
         return np.sqrt(((value) ** 2).mean()) 
+
+    #获取当前测试的节点ID
+    def getTestEdge(self):
+        return self.curAddNode.getEdge()
 
     #完成了增加边界任务，返回True。 未完成就返回False
     def addResult(self, lossValue):
@@ -248,9 +259,6 @@ class addEdgeWorker(object):
                 self.INN.addConnect(opSrcID, self.curAddNode.nodeID)
                 self.INN.setConnectWeight(opSrcID, self.curAddNode.nodeID, opWeight)
 
-                if opSrcID == 26:
-                    if self.curAddNode.nodeID == 1000:
-                        return 
                 self.curAddNode = estimatorNode(opSrcID, self.INN)
 
                 #如果选择的节点已经没有添加边线的可能了，那么继续寻找下一个节点
@@ -258,8 +266,9 @@ class addEdgeWorker(object):
                     if self.getNextNode() == False:
                         self.complete = True  
             else:
-                #没有得到最低的，那么就不能从后往前延伸了。本次添加完成
-                self.complete = True
+                #没有得到最低的，继续延伸
+                if self.getNextNode() == False:
+                    self.complete = True 
 
 
 #删除的边的情况
@@ -380,11 +389,100 @@ class delEdgeWorker(object):
         if self.curNode.complete == True:
             self.getNext()
 
+#用于调整权重节点的结果记录
+class adjstWeightResult(object):
+    def __init__(self, weight) -> None:
+        self.weight = weight
+        self.complete = False
+        self.testIndex = 0
+        self.testCount = config.testCount
+        self.testResult = []            #测试结果记录在这里
+
+    def addResult(self, lostValue):
+        self.testResult.append(lostValue)
+        logger.logger.debug("结果：" + str(lostValue))
+        self.testIndex = self.testIndex + 1
+        if self.testIndex == self.testCount:
+            #完成
+            self.complete = True
+
+    #计算均方误差
+    def rmse(self,value):
+        value = np.array(value)
+        return np.sqrt(((value) ** 2).mean())
+
+    #获取评估结果,这里是取均值 
+    def getResult(self):
+        return self.rmse(self.testResult)
+
+    #检查是否完成
+    def getComplete(self):
+        return self.complete
+
+    #获取权重索引
+    def getWeight(self):
+        return self.weight
+
+#用于调整节点的权重
+class adjustWeight(object):
+    def __init__(self, lastResult, inn) -> None:
+        self.inn = inn
+        self.lastResult = lastResult
+        self.testNode = random.randint(1, config.nodeCount - 1)
+        self.lastNodeWeight = inn.getNodeSelfWeight(self.testNode)
+        self.complete = False
+        self.weights = []
+        self.weightsIndex = 0
+        for weight in config.weights:
+            self.weights.append(adjstWeightResult(weight))
+
+    def addResult(self, lossValue):
+        if self.complete != True:
+            self.weights[self.weightsIndex].addResult(lossValue)
+            #检查本次结果是否完成，完成就继续下一个
+            if self.weights[self.weightsIndex].complete == True:
+                #增加索引，如果过大就本次完成
+                self.weightsIndex = self.weightsIndex + 1
+                if self.weightsIndex >= len(self.weights):
+                    self.complete = True
+                    self.doAfterAdjust()
+                else:
+                    #切换到下一个权重
+                    self.inn.setNodeSelfWeight(self.testNode, self.weights[self.weightsIndex].weight)
+            else:
+                pass
+            #如果没有完成，那么什么也不做，继续往下走就可以了。
+            
+    #当完成后，开始调整节点的权重
+    def doAfterAdjust(self):
+        #检查是否有比当前的效果更好的，如果有，那么就处理一下。
+        index = -1
+        minValue = self.lastResult
+        for i in range(len(self.weights)):
+            if self.weights[i].getResult() < minValue:
+                minValue = self.weights[i].getResult()
+                index = i
+        if index != -1:
+            #到这里就是有一个更好的结果了
+            self.inn.setNodeSelfWeight(self.testNode, self.weights[self.weightsIndex].weight)
+            self.lastResult = minValue
+        else:
+            #没有更好的结果了。将其调整为之前的那个。
+            self.inn.setNodeSelfWeight(self.testNode, self.lastNodeWeight)
+
+    #获取增加状态
+    def getState(self):
+        return self.testNode, self.weights[self.weightsIndex].weight
+
+
 class WorkState(Enum):
     ON_ADD_EDGE = 1
     ON_DEL_EDGE = 2
-    ON_WAIT_TO_ADD = 3
-    ON_WAIT_TO_DEL = 4
+    ON_ADJUST_WEIGHT = 3
+    ON_WAIT_TO_ADD = 4
+    ON_WAIT_TO_DEL = 5
+    ON_WAIT_TO_ADJUST = 6
+
 
 #神经网络对内接口
 class INN():
@@ -402,6 +500,10 @@ class INN():
     def addConnect(self, srcID, desID): pass
 
     def getConnectWeight(self, srcID, desID): pass
+
+    def getNodeSelfWeight(self, nodeID): pass
+
+    def setNodeSelfWeight(self, nodeID, weight): pass
 
 #神经网络对外接口
 class INeuronNetworks():
@@ -426,6 +528,7 @@ class neuronNetwork(INN, INeuronNetworks):
 
         self.addEdgeWorker = None
         self.delEdgeWorker = None
+        self.adjustWorker = None
 
         self.state = WorkState.ON_WAIT_TO_ADD  #等待的状态
 
@@ -443,6 +546,12 @@ class neuronNetwork(INN, INeuronNetworks):
     def getNodeState(self, desID):
         return self.nodes[desID].state
 
+    def getNodeSelfWeight(self, nodeID):
+        return self.nodes[nodeID].selfWeight
+    
+    def setNodeSelfWeight(self, nodeID, weight):
+        self.nodes[nodeID].selfWeight = weight
+
 
     #调用节点的时间流逝
     def timeLapse(self, nodeID, timeOffset, inputVector = None):
@@ -458,12 +567,20 @@ class neuronNetwork(INN, INeuronNetworks):
 
                 elif self.state == WorkState.ON_ADD_EDGE:
                     self.addEdgeWorker.addResult(result)
-                    #if self.addEdgeWorker.complete == True:
-                        #本次添加任务已经完成了。
-                        #self.addEdgeWorker = addEdgeWorker(self, result)
-                        #TO-DO
+                    
                     if self.addEdgeWorker.complete == True:
-                        self.state = WorkState.ON_WAIT_TO_DEL
+                        #检查神经元节点比例，超过90%的时候启动删除程序，否则一直是添加程序
+                        cCount = 0
+                        tmpResult = self.addEdgeWorker.getLastLoss()
+                        for item in self.nodes:
+                            if item.state == States.CONNECTED:
+                                cCount = cCount + 1
+                        if float(cCount) / float(len(self.nodes)) > 0.9:
+                            self.state = WorkState.ON_WAIT_TO_DEL
+                        else:
+                            #修改为修改权重模式
+                            self.adjustWorker = adjustWeight(tmpResult, self)
+                            self.state = WorkState.ON_ADJUST_WEIGHT
 
                 elif self.state == WorkState.ON_WAIT_TO_DEL:
                     self.state = WorkState.ON_DEL_EDGE
@@ -474,9 +591,25 @@ class neuronNetwork(INN, INeuronNetworks):
                     if self.delEdgeWorker.complete == True:
                         self.state = WorkState.ON_WAIT_TO_ADD
 
+                elif self.state == WorkState.ON_ADJUST_WEIGHT:
+                    self.adjustWorker.addResult(result)
+                    if self.adjustWorker.complete == True:
+                        tmpResult = self.adjustWorker.lastResult
+                        self.addEdgeWorker = addEdgeWorker(self, tmpResult)
+                        self.state = WorkState.ON_ADD_EDGE
+
         else:
             result = self.nodes[nodeID].timeLapse(inputVector)
         return result
+
+    def getWorkState(self):
+        #返回三个值，分别是当前状态，是新增还是删除； 起始节点；目的节点
+        if self.state == WorkState.ON_WAIT_TO_ADD:
+            return WorkState.ON_WAIT_TO_ADD, (0,0)
+        elif self.state == WorkState.ON_ADD_EDGE:
+            return WorkState.ON_ADD_EDGE, self.addEdgeWorker.getTestEdge()
+        elif self.state == WorkState.ON_ADJUST_WEIGHT:
+            return WorkState.ON_ADJUST_WEIGHT, self.adjustWorker.getState()
 
     def overTransmit(self, packet):
         self.SN.recvPacket(packet)
@@ -485,6 +618,15 @@ class neuronNetwork(INN, INeuronNetworks):
     def getSNStates(self):
         return self.SN.getLastStates()
 
+    #获取当前稳定情况下的损失值
+    def getCurStableLoss(self):
+        if self.state == WorkState.ON_ADD_EDGE:
+            return self.addEdgeWorker.getLastLoss()
+        elif self.state == WorkState.ON_ADJUST_WEIGHT:
+            return self.adjustWorker.lastResult
+        else:
+            return 1
+    
     #INN接口的部分
 
     #获取到某个节点的边线
