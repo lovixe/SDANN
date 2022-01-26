@@ -28,7 +28,7 @@ class packet(object):
     #时间流逝, 当返回False，表示这个数据包已经超时了。当返回True时，表明这个数据包正常
     def timeLapse(self):
         packetLens = len(self.packets)
-        for i in range(packetLens - 1, 0, -1):
+        for i in range(packetLens - 1, -1, -1):
             if self.packets[i].timeLapse() == True:
                 del self.packets[i]
         #计算得分,按照时间进行积分

@@ -482,6 +482,7 @@ class WorkState(Enum):
     ON_WAIT_TO_ADD = 4
     ON_WAIT_TO_DEL = 5
     ON_WAIT_TO_ADJUST = 6
+    ON_STABLE = 7
 
 
 #神经网络对内接口
@@ -570,6 +571,11 @@ class neuronNetwork(INN, INeuronNetworks):
                     
                     if self.addEdgeWorker.complete == True:
                         #检查神经元节点比例，超过90%的时候启动删除程序，否则一直是添加程序
+
+                        #TEST, 转变为稳定等待，方便调试
+                        #self.state = WorkState.ON_STABLE
+                        #return
+
                         cCount = 0
                         tmpResult = self.addEdgeWorker.getLastLoss()
                         for item in self.nodes:
@@ -597,6 +603,8 @@ class neuronNetwork(INN, INeuronNetworks):
                         tmpResult = self.adjustWorker.lastResult
                         self.addEdgeWorker = addEdgeWorker(self, tmpResult)
                         self.state = WorkState.ON_ADD_EDGE
+                elif self.state == WorkState.ON_STABLE:
+                    pass #不进行什么动作
 
         else:
             result = self.nodes[nodeID].timeLapse(inputVector)
@@ -610,6 +618,8 @@ class neuronNetwork(INN, INeuronNetworks):
             return WorkState.ON_ADD_EDGE, self.addEdgeWorker.getTestEdge()
         elif self.state == WorkState.ON_ADJUST_WEIGHT:
             return WorkState.ON_ADJUST_WEIGHT, self.adjustWorker.getState()
+        elif self.state == WorkState.ON_STABLE:
+            return WorkState.ON_STABLE, (0,0)
 
     def overTransmit(self, packet):
         self.SN.recvPacket(packet)
