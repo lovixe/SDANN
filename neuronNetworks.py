@@ -22,7 +22,7 @@ class estimatorWeight(object):
     #增加一个结果
     def addResult(self, lostValue):
         self.testResult.append(lostValue)
-        logger.logger.debug("结果：" + str(lostValue))
+        #logger.logger.info("结果：" + str(lostValue))
         self.testIndex = self.testIndex + 1
         if self.testIndex == self.testCount:
             #完成
@@ -63,9 +63,9 @@ class estimatorEdge(object):
     def active(self):
         #这条边被激活，需要自己新加这条边。然后设置权重
         self.INN.addConnect(self.sourceID, self.desID)
-        logger.logger.debug('增加边线：' + str(self.sourceID) + ' 至 ' + str(self.desID))
+        #logger.logger.debug('增加边线：' + str(self.sourceID) + ' 至 ' + str(self.desID))
         self.INN.setConnectWeight(self.sourceID, self.desID, self.weightGroup[self.testIndex].getWeight())
-        logger.logger.debug('修改权重：' + str(self.sourceID) + ' 至 ' + str(self.desID) + ' : ' + str(self.weightGroup[self.testIndex].getWeight()))
+        #logger.logger.debug('修改权重：' + str(self.sourceID) + ' 至 ' + str(self.desID) + ' : ' + str(self.weightGroup[self.testIndex].getWeight()))
 
     #增加一个评估结果
     def addResult(self, lostValue):
@@ -75,20 +75,15 @@ class estimatorEdge(object):
             self.testIndex = self.testIndex + 1
             
             if self.testIndex == len(self.weightGroup):
-                # if self.desID > 10:
-                #     self.testIndex = self.testIndex - 1
-                #     logger.logger.debug('修改权重：' + str(self.sourceID) + ' 至 ' + str(self.desID) + ' : ' + str(self.weightGroup[self.testIndex].getWeight()))
-                #     return
-                # else:
                 self.complete = True
                 #完成后要删除自己添加的那一条边
                 self.INN.delConnect(self.sourceID, self.desID)
-                logger.logger.debug('删除边线：' + str(self.sourceID) + ' 至 ' + str(self.desID))
+                #logger.logger.debug('删除边线：' + str(self.sourceID) + ' 至 ' + str(self.desID))
                 return
             
             #测试完了一组，需要设置新的权重
             self.INN.setConnectWeight(self.sourceID, self.desID, self.weightGroup[self.testIndex].getWeight())
-            logger.logger.debug('修改权重：' + str(self.sourceID) + ' 至 ' + str(self.desID) + ' : ' + str(self.weightGroup[self.testIndex].getWeight()))
+            #logger.logger.debug('修改权重：' + str(self.sourceID) + ' 至 ' + str(self.desID) + ' : ' + str(self.weightGroup[self.testIndex].getWeight()))
 
     #获得评估结果, 返回最佳的权重组以及对应的值
     def getResult(self):
@@ -218,13 +213,13 @@ class addEdgeWorker(object):
 
         if len(wnConnect) == 0:
             self.complete = True
-            logger.logger.debug('已经到达尾部节点')
+            #logger.logger.debug('已经到达尾部节点')
             return False   #到头了
 
         #没有到头，那就随机的找一个
         randomValue = random.randint(0,len(wnConnect) - 1)
 
-        logger.logger.debug('延长至节点' + str(wnConnect[randomValue]))
+        #logger.logger.debug('延长至节点' + str(wnConnect[randomValue]))
         self.curAddNode = estimatorNode(wnConnect[randomValue], self.INN)
         #判断节点是否完成或者是否是一个散点，是的话都不具备作为候选的可能
         if self.curAddNode.getComplete() == True or self.INN.getNodeState(self.curAddNode.nodeID) == States.SCATTERED:
@@ -252,7 +247,7 @@ class addEdgeWorker(object):
             #获取最佳的结构，并更新到实际的网络中
             opSrcID, opWeight, opValue = self.curAddNode.getResult()
             if opValue < self.getLastLoss():
-                logger.logger.info('节点测试完成，新增连接从' + str(opSrcID) + ' 到 ' + str(self.curAddNode) + '. 权重为 ' + str(opWeight))
+                logger.logger.info('节点测试完成，新增连接从' + str(opSrcID) + ' 到 ' + str(self.curAddNode.nodeID) + '. 权重为 ' + str(opWeight))
                 logger.logger.info('原有损失值为 ' + str(self.lastLoss) + ' 新损失值为 ' + str(opValue))
                 self.lastLoss = opValue
                 
@@ -400,7 +395,7 @@ class adjstWeightResult(object):
 
     def addResult(self, lostValue):
         self.testResult.append(lostValue)
-        logger.logger.debug("结果：" + str(lostValue))
+        #logger.logger.debug("结果：" + str(lostValue))
         self.testIndex = self.testIndex + 1
         if self.testIndex == self.testCount:
             #完成
@@ -464,7 +459,7 @@ class adjustWeight(object):
                 index = i
         if index != -1:
             #到这里就是有一个更好的结果了
-            self.inn.setNodeSelfWeight(self.testNode, self.weights[self.weightsIndex].weight)
+            self.inn.setNodeSelfWeight(self.testNode, self.weights[index].weight)
             self.lastResult = minValue
         else:
             #没有更好的结果了。将其调整为之前的那个。

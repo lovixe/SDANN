@@ -125,18 +125,19 @@ class node(object):
                 #本身没有数据，那么直接用就可以
                 self.packet = tmp
             else:
-                #进行合并，如果满了就开一个新的了
-                count = self.packet.aggregation(tmp)
-                if count < len(tmp.packets):
-                    #未能全部完成聚合
-                    del tmp.packets[0:count]
-                    self.neuronNetwork.overTransmit(self.packet)
-                    self.packet = tmp
-                else:
+                #进行合并
+                if self.packet.getRemainSpace() > len(tmp.packets):
+                    #并没有填满，那么直接聚合就可以
+                    self.packet = copy.deepcopy(self.packet.aggregation(tmp))
                     #完成聚合了，那么这个tmp就没有什么用途了
                     if self.packet.getRemainSpace() == 0:
                         self.neuronNetwork.overTransmit(self.packet)
                         self.packet = None
+                else:
+                    #一个数据包不够，那么只能先填满一个，然后将另一个作为自己的数据包
+                    tmp, self.packet = self.packet.aggregationFull(tmp)
+                    self.neuronNetwork.overTransmit(tmp)
+                    
 
     #获取信息量
     def getQI(self):

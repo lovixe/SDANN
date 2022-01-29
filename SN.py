@@ -47,7 +47,7 @@ class sinkNode(neuron.neuronNode):
                     recvListID = ''
                     for xxx in item.packets:
                         recvListID = recvListID + str(xxx.nodeID) + ','
-                    logger.logger.info('SN 接收到的数据包列表 ' + recvListID)
+                    #logger.logger.info('SN 接收到的数据包列表 ' + recvListID)
 
                 #清理现有的记录
                 self.recvs.clear()
@@ -56,14 +56,53 @@ class sinkNode(neuron.neuronNode):
                 return None
         else:
             return None
-
-    #计算损失度函数
-    def calcLost(self):
+        
+        
+    #计算得分
+    def calcPacketAggGoal(self, packet):
+        #这里是计算一个数据包的聚合得分的
+        timestamps = []
+        for item in packet.packets:
+            timestamps.append(item.aggTimestamp)
+        timestamps.sort()
+        #获得本数据包的时间长度
+        t = packet.timestamp
+        goal = 0
+        #遍历记录的节点信息
+        for i in range(len(timestamps)):
+            if t == 0:
+                goal = goal + pow(10, i) * 9    #直接给最大值
+            else:
+                if timestamps[i] != 0:
+                    goal = goal + pow(10, i) * int(9 - (timestamps[i] - 1) / t)
+                else:
+                    goal = goal + pow(10, i) * int(9 - timestamps[i] / t)
+        #返回得分
+        return goal
+        
+    #计算聚合损失的函数
+    def calcAggLoss(self):
         recvCount = 0
-        lost = []
-        #清理重复的数据包
+        #获得最大值
+        maxGoal = pow(10, self.maxInforInSingleFrm) - 1
+        #遍历每一个数据包，得到每个数据包的聚合损失
+        loss = 0
+        for packet in self.recvs:
+            loss = loss + maxGoal - self.calcPacketAggGoal(packet)
+            recvCount = recvCount + len(packet.packets)
+            
+        #增加上丢失的节点
+        loss = loss + maxGoal * (self.nodeCount - recvCount)     
+        #计算均方根差
+        loss = loss / (2 * self.nodeCount)
+        #归一
+        loss = loss / (maxGoal / 2)
+        return loss
+    
+    #计算时间损失的函数
+    def calcTimeLoss(self):
+        recvCount = 0
         recvedTime = []     #记录数据包接受时间
-        aggLoss = []        #记录数据包聚合损失情况
         #遍历接受到的数据包
         for item in self.recvs:
             #item 是一个数据包
@@ -71,40 +110,28 @@ class sinkNode(neuron.neuronNode):
                 #记录数据包的接受时间
                 recvedTime.append(node.timestamp)
                 recvCount = recvCount + 1
-            aggLoss.append(item.aggLoss)
-
-        #计算损失值
-        #先计算时间上的损失值。使用的是均方差损失函数。
-        # 接受的时间越长，其损失越大
+        #计算时间上的损失值使用的是均方差损失函数。
+        #接受的时间越长，其损失越大
         #lossTime = 1/(2 * nodeCount) \sum_i^n recvedTime[i]^2
         lossTime = 0
+        #计算收到的数据包的时间损失
         for item in recvedTime:
             lossTime = lossTime + item * item
+        #计算未收到的数据包的时间损失
         for i in range(self.nodeCount - recvCount):
             lossTime = lossTime + self.cycleWidth * self.cycleWidth
+        #综合计算
         lossTime = lossTime / (2 * self.nodeCount)
         #归于[0,1]
         lossTime = lossTime / (pow(self.cycleWidth, 2) / 2)
+        return lossTime
 
-        #后计算信息量的损失值。使用的同样是均方差损失函数
-        #损失值有上限，设置为最大的单个节点的数据包一直到最大时间才到SN
-        lossQI= 0
-        maxLossQI = (config.maxQIInFrm - 1) * self.cycleWidth
-        for item in aggLoss:
-            if item > maxLossQI:
-                tmp = maxLossQI
-            else:
-                tmp = item
-            lossQI = lossQI + pow(tmp, 2)
+    #计算损失度函数
+    def calcLost(self):
+        lost = []
 
-        #统计丢失的节点,按最大值处理
-        for i in range(self.nodeCount - recvCount):
-            lossQI = lossQI + pow(maxLossQI, 2)
-
-        # 要除以的个数是接受到的个数以及丢失的个数
-        lossQI = lossQI / (2 * self.nodeCount)
-        #归于[0,1]
-        lossQI = lossQI / (pow(maxLossQI, 2) / 2)
+        lossTime = self.calcTimeLoss()
+        lossQI = self.calcAggLoss()
 
         #得到损失值向量
         lost.append(lossTime)
