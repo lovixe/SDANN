@@ -26,9 +26,24 @@ class sinkNode(neuron.neuronNode):
         self.edges = []
         self.state = States.CONNECTED
 
+        self.result = []
+        self.testCount = config.testCount
+
     def recvPacket(self, packet):
         #SN节点的数据包，已经完成了传输，不再进行时间流逝
         self.recvs.append(copy.deepcopy(packet))
+    
+    def isComplete(self):
+        if len(self.result) >= self.testCount:
+            return True
+        else:
+            return False
+    
+    def resetResult(self):
+        self.result.clear()
+
+    def getResult(self):
+        return self.result
 
     #不断的调用这个函数，SN需要自己在何时的时候计算损失值
     #更新了一轮，则返回损失值，否则返回None
@@ -39,7 +54,9 @@ class sinkNode(neuron.neuronNode):
             if self.timeSec % self.dataCreateCycle == 0:
                 #已经到了最新的一节了，计算上一次的情况
                 lost = self.calcLost()
+                logger.logger.info('测试结果：{}'.format(lost))
                 self.lastLossValue = lost
+                self.result.append(lost)
 
                 self.lastLoopRecvs.clear()
                 for item in self.recvs:
