@@ -54,7 +54,6 @@ class sinkNode(neuron.neuronNode):
             if self.timeSec % self.dataCreateCycle == 0:
                 #已经到了最新的一节了，计算上一次的情况
                 lost = self.calcLost()
-                logger.logger.info('测试结果：{}'.format(lost))
                 self.lastLossValue = lost
                 self.result.append(lost)
 

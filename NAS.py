@@ -31,7 +31,7 @@ class AddedWeight(object):
 
     #获取评估结果,这里是取均值 
     def getResult(self):
-        return self.rmse(self.model.getResult())
+        return self.model.getResult()
 
     #检查是否完成
     def isComplete(self):
@@ -140,7 +140,7 @@ class AddEdge(BaseAdjust):
                 temp = self.models[0].getConnectToNode(self.curNode.nodeID)
                 wnConnect = []
                 for item in temp:
-                    if item > self.curAddNode.nodeID:
+                    if item > self.curNode.nodeID:
                         wnConnect.append(item)
 
                 if len(wnConnect) == 0:
@@ -154,6 +154,44 @@ class AddEdge(BaseAdjust):
                 #logger.logger.debug('延长至节点' + str(wnConnect[randomValue]))
                 self.curNode = AddedNode(wnConnect[randomValue], self.models)
 
+
+class adjustWeight(BaseAdjust):
+    def start(self, lossValue):
+        self.lossValue = lossValue
+        #随机选择一个节点作为调整权重的节点
+        self.adjNodeID = random.randint(1, config.nodeCount - 1)
+
+        print('选择{0}作为调整权重节点'.format(self.adjNodeID))
+
+        #无需记录旧有的权重，因为一定在覆盖范围内
+
+        #准备开始调整权重
+        self.weights = config.weights
+        self.testResults = []
+        for i in range(len(self.weights)):
+            self.models[i].setSelfWeight(self.adjNodeID, self.weights[i])
+            self.models[i].resetResult()
+
+        while True:
+            hasDone = True
+            for item in self.models:
+                if item.isComplete() == False:
+                    hasDone = False
+            if hasDone == True:
+                break
+        
+        #已经测试完成，现在开始检查各个结果
+        minValue = 1
+        minIndex = -1
+        for i in range(len(self.models)):
+            if self.models[i].getResult() < minValue:
+                minValue = self.models[i].getResult()
+                minIndex = i
+        #统一更新所有的模型
+        for item in self.models:
+            item.setSelfWeight(self.adjNodeID, self.weights[minIndex])
+        self.lossValue = minValue
+
 class NAS(object):
     def __init__(self, models) -> None:
         self.lastLost = 1       #最后的损失值
@@ -164,6 +202,16 @@ class NAS(object):
     def doTest(self):
         lastLost = 1
         while True:
+            #增加边
             adder = AddEdge(self.models)
             adder.start(lastLost)
             lastLost = adder.lastLoss
+
+            #调整一个节点的权重
+            adj = adjustWeight(self.models)
+            adj.start(lastLost)
+            adj.start(lastLost)
+            adj.start(lastLost)
+            adj.start(lastLost)
+            lastLost = adj.lossValue
+            print('最佳损失值为{0}'.format(lastLost))

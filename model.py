@@ -1,10 +1,15 @@
 from asyncore import dispatcher_with_send
 from concurrent.futures import thread
+import imp
+import multiprocessing
+from queue import Queue
 from neuron import States
 import wirelessNode
 import neuronNetworks
 from configure import config
-import threading
+from multiprocessing import Process
+from multiprocessing import Value
+import numpy as np
 
 class Model(object):
     def __init__(self):
@@ -28,41 +33,45 @@ class Model(object):
     def getNodeState(self, nodeID):
         return self.nn.getNodeState(nodeID)
 
+    def getConnectToNode(self, nodeID):
+        return self.nn.getConnectToNode(nodeID)
+
     def isComplete(self):
-        #只有当线程停止之后，才可以获取数据
-        if self.complete == False:
+        if self.runFlag.value == 0:
             return False
-        return self.nn.isComplete() #这里基本是True
+        else:
+            return True
 
     #调用这个函数时，线程会重新跑起来
     def resetResult(self):
-        self.nn.resetResult()
-        self.complete = False   
+        self.startTest()
 
     def getResult(self):
-        return self.nn.getResult()
+        return self.result.value
+
+    def setModelID(self, id):
+        self.id = id
 
     def startTest(self):
-        if self.isComplete() == True:
-            return False
 
-        self.nn.resetResult()
-        t = threading.Thread(target=self.doTest)
-        t.start()
+        self.runFlag = Value('b', False)
+        self.result = Value('f', 1)
+
+        self.t = Process(target=self.doTest, args=(self.nn, self.wn, self.runFlag, self.result))
+        self.t.start()
         return True
 
-    def doTest(self):
-        while True:
-            #一直保持运行，当已完成的时候，不做什么动作
-            if self.complete == True:
-                pass
-            else:
-            #当未完成时，开始工作，直到完成测试。完成测试后complete会被修改为True
-                timeSec = 0
-                slotPerSec = config.slotPerSec
-                while self.nn.isComplete() == False:
-                    for i in range(slotPerSec):
-                        self.wn.timeLapse(timeSec, i)
-                    timeSec = timeSec + 1
-                self.complete = True
+    def doTest(self, nn, wn, runFlag, result):
+        #当未完成时，开始工作，直到完成测试。完成测试后complete会被修改为True
+        timeSec = 0
+        slotPerSec = config.slotPerSec
+        nn.resetResult()
+        while nn.isComplete() == False:
+            for i in range(slotPerSec):
+                wn.timeLapse(timeSec, i)
+            timeSec = timeSec + 1
+        runResult = nn.getResult()
+        value = np.array(runResult) 
+        result.value = np.sqrt(((value) ** 2).mean())
+        runFlag.value = 1
         

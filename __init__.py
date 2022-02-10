@@ -1,7 +1,6 @@
 #主入口
 
 import copy
-from matplotlib.pyplot import show
 from neuron import States
 import neuronNetworks
 from configure import config
@@ -46,9 +45,8 @@ weightCount = len(config.weights)
 for i in range(1, len(config.weights), 1):
   models.append(copy.deepcopy(models[0]))
 
-for item in models:
-  if item.startTest() == False:
-    raise Exception('Wrong Thread')
+for i in range(4):
+  models[i].setModelID(i)
 
 #准备将控制权交给NAS
 nas = NAS.NAS(models)
