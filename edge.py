@@ -20,4 +20,4 @@ class edge(object):
         self.linkWeight = weight
 
     def getWeight(self):
-        return self.linkWeight.getWeight()
+        return self.linkWeight

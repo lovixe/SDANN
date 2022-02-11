@@ -534,6 +534,10 @@ class neuronNetwork(INN, INeuronNetworks):
             #按照顺序添加
             self.nodes.append(item)
 
+    #设置最小值
+    def setLastLoss(self, minValue):
+        self.SN.setLastLoss(minValue)
+
     #设置连接
     def setLinkGroup(self, linkGroup):
         self.linkGroup = linkGroup
@@ -622,5 +626,10 @@ class neuronNetwork(INN, INeuronNetworks):
     def addConnect(self, srcID, desID):
         node = self.nodes[srcID]
         node.addEdge(desID)
+
+    #记录结构
+    def recordStructure(self, stream):
+        for node in self.nodes:
+            node.recordStructure(stream)
     
     

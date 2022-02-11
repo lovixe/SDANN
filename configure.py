@@ -12,6 +12,7 @@ class configureReader(object):
         self.slotPerSec = self.getSlotPerSec()
         self.connectRange = self.getConnectRange()
         self.maxLiveTime = self.getMaxLiveTime()
+        self.recordStructFile = self.getRecordFileName()
     #读取权重配置
     def getWeightConfig(self):
         cf = configparser.ConfigParser()
@@ -82,5 +83,11 @@ class configureReader(object):
         cf.read('configure.ini')
         result = cf.get('system', 'maxLiveTime')
         return int(result)
+
+    def getRecordFileName(self):
+        cf = configparser.ConfigParser()
+        cf.read('configure.ini')
+        result = cf.get('system', 'recordStructureFileName')
+        return result
 
 config = configureReader()

@@ -111,3 +111,20 @@ class neuronNode(object):
         #这里的激活函数的中间计算过程，只有一个1，其他都是0. 为0不用处理，为1就是需要处理的
         #计算的最后一步交由上层的仿真部分进行处理
         return connectID
+
+    #记录结构
+    def recordStructure(self, stream):
+        for item in self.edges:
+            itemRecord = 'edge:'
+            weight = item.getWeight()
+            itemRecord = itemRecord + str(item.fromID) + ':' + str(item.toID) + ':'
+            for i in weight:
+                itemRecord = itemRecord + str(i) + ':'
+            itemRecord = itemRecord[0:len(itemRecord) - 1]
+            stream.write(itemRecord + '\n')
+        #记录自己的权重
+        itemRecord = 'selfWeight:' + str(self.nodeID) + ":"
+        for item in self.selfWeight:
+            itemRecord = itemRecord + str(item) + ':'
+        itemRecord = itemRecord[0:len(itemRecord) - 1]
+        stream.write(itemRecord + '\n')

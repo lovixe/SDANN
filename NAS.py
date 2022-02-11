@@ -119,6 +119,9 @@ class AddedNode(object):
 class AddEdge(BaseAdjust):
     def start(self, lastLoss):
         self.lastLoss = lastLoss
+
+        recordStream = open(config.recordStructFile, 'a+')
+
         #开始工作,先设置增加ID
         self.curNode = AddedNode(0, self.models)
 
@@ -131,6 +134,12 @@ class AddEdge(BaseAdjust):
                 for item in self.models:
                     item.addEdge(opSrcID, opDesID)
                     item.setWeight(opSrcID, opDesID, opWeight)
+                    item.setLastLoss(value)
+
+                #记录信息
+                recordStream.write('******************************************************\n')
+                self.models[0].recordStructure(recordStream)
+
                 #将下一个终点设置为本节点,并开始进行测试
                 self.curNode = AddedNode(opSrcID, self.models)
             #然后继续寻找下一个节点，直到完成
@@ -146,6 +155,8 @@ class AddEdge(BaseAdjust):
                 if len(wnConnect) == 0:
                     #本次添加器已经完成了工作, 直接返回就可以了
                     print('本次增加测试已经完成')
+                    recordStream.flush()
+                    recordStream.close()
                     return
 
                 #没有到头，那就随机的找一个
@@ -170,7 +181,8 @@ class adjustWeight(BaseAdjust):
         self.testResults = []
         for i in range(len(self.weights)):
             self.models[i].setSelfWeight(self.adjNodeID, self.weights[i])
-            self.models[i].resetResult()
+            self.models[i].setLastLoss(lossValue)
+            self.models[i].resetResult()         
 
         while True:
             hasDone = True
@@ -190,7 +202,15 @@ class adjustWeight(BaseAdjust):
         #统一更新所有的模型
         for item in self.models:
             item.setSelfWeight(self.adjNodeID, self.weights[minIndex])
-        self.lossValue = minValue
+
+        #记录
+        if minValue < self.lossValue:
+            stream = open(config.recordStructFile, 'a+')
+            stream.write('******************************************************\n')
+            self.models[0].recordStructure(stream)
+            stream.flush()
+            stream.close()
+        
 
 class NAS(object):
     def __init__(self, models) -> None:

@@ -41,10 +41,16 @@ class Model(object):
             return False
         else:
             return True
+    
+    def recordStructure(self, stream):
+        self.nn.recordStructure(stream)
 
     #调用这个函数时，线程会重新跑起来
     def resetResult(self):
         self.startTest()
+
+    def setLastLoss(self, minValue):
+        self.nn.setLastLoss(minValue)
 
     def getResult(self):
         return self.result.value

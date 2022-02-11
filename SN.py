@@ -5,6 +5,7 @@ from configure import config
 import copy
 import neuron
 from logger import logger
+import numpy as np
 
 
 class sinkNode(neuron.neuronNode):
@@ -29,6 +30,8 @@ class sinkNode(neuron.neuronNode):
         self.result = []
         self.testCount = config.testCount
 
+        self.minlossValue = 1
+
     def recvPacket(self, packet):
         #SN节点的数据包，已经完成了传输，不再进行时间流逝
         self.recvs.append(copy.deepcopy(packet))
@@ -41,6 +44,14 @@ class sinkNode(neuron.neuronNode):
     
     def resetResult(self):
         self.result.clear()
+
+    #计算均方误差
+    def rmse(self,value):
+        value = np.array(value)
+        return np.sqrt(((value) ** 2).mean())
+
+    def setLastLoss(self, minlossValue):
+        self.minlossValue = minlossValue
 
     def getResult(self):
         return self.result
@@ -58,12 +69,20 @@ class sinkNode(neuron.neuronNode):
                 self.result.append(lost)
 
                 self.lastLoopRecvs.clear()
-                for item in self.recvs:
-                    self.lastLoopRecvs.append(item)
-                    recvListID = ''
-                    for xxx in item.packets:
-                        recvListID = recvListID + str(xxx.nodeID) + ','
-                    #logger.logger.info('SN 接收到的数据包列表 ' + recvListID)
+                #检查，如果达到了历史最佳，那么需要记录一下聚合的数据是什么样子的
+                if len(self.result) >= 3 and self.rmse(self.result) < self.minlossValue:
+                    logger.logger.info('--------------------------------------')
+                    logger.logger.info('当前损失值:{}, 当前最小损失值{}'.format(self.rmse(lost), self.minlossValue)) 
+                    self.minlossValue = self.rmse(lost)
+                    
+                    for item in self.recvs:
+                        self.lastLoopRecvs.append(item)
+                        recvListID = ''
+                        for xxx in item.packets:
+                            recvListID = recvListID + str(xxx.nodeID) + ','
+                        logger.logger.info('SN 接收到的数据包列表 ' + recvListID)    
+                    
+                    logger.logger.info('**********************************************')         
 
                 #清理现有的记录
                 self.recvs.clear()
@@ -156,6 +175,9 @@ class sinkNode(neuron.neuronNode):
 
     def getLastStates(self):
         return self.lastLoopRecvs
+
+    def recordStructure(self, stream):
+        pass
 
             
             
