@@ -59,7 +59,6 @@ class Model(object):
         self.id = id
 
     def startTest(self):
-
         self.runFlag = Value('b', False)
         self.result = Value('f', 1)
 
